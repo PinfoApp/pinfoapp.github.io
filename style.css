@@ -174,27 +174,46 @@ a {
 #carousel {
     display: flex;
     justify-content: center;
+    align-items: center;
     max-width: calc(100% + 4rem);
     box-sizing: border-box;
     overflow-x: clip;
 }
 
-.carousel-img:not(#carousel-img-4) {
+.carousel-img {
+    flex-shrink: 0;
     filter: drop-shadow(2px 4px 6px #00000030);
+}
+
+.carousel-img:not(:nth-child(4)) {
+    width: 184px;
+}
+
+#carousel-img-4 {
+    width: 308px;
 }
 
 .carousel-img:not(:last-child) {
     padding-right: 2em;
 }
 
-#carousel-img-2, #carousel-img-4 {
-    transform: translateY(5%);
+#carousel-img-2, #carousel-img-6 {
+    transform: translateY(10%);
 }
 
 #carousel-img-3, #carousel-img-5 {
-    transform: translateY(-5%);
+    transform: translateY(-10%);
 }
 
+@media (max-width: 423px) {
+    .carousel-img:not(:nth-child(4)) {
+        width: 110px;
+    }
+
+    #carousel-img-4 {
+        width: 184px;
+    }
+}
 
 #slide-2 {
     color: #FFFFFF;
@@ -230,9 +249,10 @@ li {
 }
 
 #cta-2 {
-    background-image: url("./assets/cta-2.svg");
+    background-image: url("./assets/cta-2.png");
     background-repeat: no-repeat;
     background-position: bottom center;
+    background-size: auto 80%;
     width: 100%;
     box-sizing: border-box;
     height: 100%;
@@ -454,37 +474,37 @@ input[type="checkbox"] {
     font-weight: 300;
 }
 
-label {
+.question-header {
     display: flex;
     justify-content: space-between;
     cursor: pointer;
     align-items: center;
 }
 
-input[type="checkbox"] ~ label:hover {
+.question-header:not(.active):hover {
     color: #000000;
     background-color: #E7E7FF;
 }
 
-input[type="checkbox"]:checked ~ label {
+.question-header.active {
     color: #FFFFFF;
     background-color: #6B4EFF;
 }
 
-input[type="checkbox"]:checked ~ label:hover {
+.question-header.active:hover {
     color: #000000;
     background-color: #a1a1ff;
 }
 
-input[type="checkbox"] ~ .accordion-content {
+.accordion-content {
     max-height: 0;
     overflow: hidden;
-    transition: 0.2s;
+    transition: 0.5s;
 }
 
-input[type="checkbox"]:checked ~ .accordion-content {
-    max-height: fit-content;
-    transition: height 0.5s ease-in;
+.active + .accordion-content {
+    max-height: 180px;
+    transition: max-height 0.4s ease-in-out;
 }
 
 #footer {
