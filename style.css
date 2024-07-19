@@ -39,7 +39,7 @@ a {
     padding-left: 2em;    
 }
 
-#app-button-wrapper {
+.button-wrapper {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
@@ -48,11 +48,9 @@ a {
     
     width: 123px;
     height: 40px;
-    padding-right: 2em;    
 }
 
-
-#app-button {
+.button {
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -65,6 +63,10 @@ a {
     background: #6B4EFF;
     color: #FFFFFF;
     border-radius: 4px;
+}
+
+#header-button-wrapper {
+    padding-right: 2em;    
 }
 
 
@@ -110,13 +112,13 @@ a {
     max-width: 100vw;
     top: 72px;
     left: 0px;
-    height: calc(100dvh - 72px);
+    /* min-height: calc(100dvh - 72px); */
     max-height: calc(100dvh - 72px);
     box-sizing: border-box;
     overflow-x: clip;
     overflow-y: scroll;
     scrollbar-width: none;
-    scroll-snap-type: y mandatory;
+    /* scroll-snap-type: y proximity; */
 }
 
 .pinfo-slide-flex {
@@ -251,11 +253,11 @@ li {
 #cta-2 {
     background-image: url("./assets/cta-2.png");
     background-repeat: no-repeat;
-    background-position: bottom center;
+    background-position: center center;
     background-size: auto 80%;
     width: 100%;
     box-sizing: border-box;
-    height: 100%;
+    /* height: 100%; */
     padding: 2rem;
     overflow: hidden;
     display: flex;
@@ -264,11 +266,16 @@ li {
     justify-content: center;
     justify-items: center;
     scroll-snap-align: start;  
+    min-height: calc(50dvh - 72px);
 }
 
 #slogan {
     font-size: 48px;
     text-align: center;
+}
+
+#cta-2-button-wrapper {
+  padding-bottom: 48px;
 }
 
 #slide-4 {
@@ -320,6 +327,13 @@ li {
     white-space: nowrap;
 }
 
+
+@media (max-width: 423px) {
+    #slide-7-content {
+      padding-inline: 0;
+    }
+}
+
 #review-carousel {
     display: flex;
     justify-content: center;
@@ -363,7 +377,7 @@ li {
 
 @media (max-height: 898px) and (max-width: 435px) {
     #slide-7 {
-        padding-block: 0;
+        /* padding-block: 0; */
         overflow-y: scroll;
     }
 
@@ -373,6 +387,16 @@ li {
 
     .review {
         margin-block: 1rem;
+        font-size: 30px;
+    }
+}
+
+@media (max-width: 434px) {
+    #cta h2 {
+        font-size: 30px;
+    }
+
+    .review {
         font-size: 30px;
     }
 }
@@ -444,11 +468,6 @@ li {
     overflow: scroll;
     width: 100%;
     box-sizing: border-box;
-}
-
-input[type="checkbox"] {
-    display: none;
-    appearance: none;
 }
 
 .accordion-item {
@@ -590,7 +609,7 @@ input[type="checkbox"] {
 @media (max-width: 624px) {
     .pinfo-slide {
         grid-template-columns: 1fr;
-        grid-template-rows: 50% 50%;
+        /* grid-template-rows: 50% 50%; */
     }
 
     .slide-img {
