@@ -242,10 +242,6 @@ p li {
     color: #FFFFFF;
 }
 
-li {
-    margin-bottom: 1rem;
-}
-
 #slide-3 {
     color: #FFFFFF;
     background-color: #6B4EFF;
@@ -679,25 +675,23 @@ li {
   padding-top: calc(72px + 4rem);
 }
 
-#tos-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#tos-content {
+  color: white;
+  max-width: 800px;
   margin: auto;
-  padding: 1rem;
-  box-sizing: border-box;
-  max-width: 500px;
-  width: 100%;
+  padding-inline: 4rem;
 }
 
-#tos-text {
-  color: #FFFFFF;
-  max-height: 400px;
-  min-height: 200px;
-  overflow-y: auto;
-  padding: 1rem;
-  border: 1px solid white;
-  background: #333; 
-  -ms-overflow-style: scrollbar;
-  scrollbar-width: thin;
+h1 {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 50px;
+    display: flex;
+    align-items: center;
+    margin-block: 0;
+}
+
+.indent {
+  margin-left: 1rem;
 }
