@@ -575,6 +575,7 @@ p li {
 .footer-element:hover {
     color: #6B4EFF;
     padding-left: 0.5em;
+    margin-right: -0.5em;
 }
 
 @media (max-width: 1184px) {
