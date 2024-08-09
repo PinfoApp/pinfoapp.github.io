@@ -683,6 +683,7 @@ p li {
 }
 
 .info-content p {
+  scroll-margin-top: 72px;
   text-align: justify;
 }
 
