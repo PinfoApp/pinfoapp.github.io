@@ -682,6 +682,10 @@ p li {
   padding-inline: 2rem;
 }
 
+.info-content p {
+  text-align: justify;
+}
+
 h1 {
     font-family: 'Inter';
     font-style: normal;
