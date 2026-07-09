@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Pinfo - Event</title>
+
+  <!-- Smart App Banner. Replace APPSTORE_NUMERIC_ID with the real App Store id
+       once the app is live; the app-argument is filled per-event by the script. -->
+  <meta id="smart-banner" name="apple-itunes-app" content="app-id=APPSTORE_NUMERIC_ID" />
+
+  <!-- Open Graph (rich previews when the link is shared in chats/social). Filled
+       in by the script with the real title/cover. -->
+  <meta property="og:title" id="og-title" content="An event on Pinfo" />
+  <meta property="og:description" content="Discover events near you on Pinfo." />
+  <meta property="og:image" id="og-image" content="" />
+  <meta property="og:type" content="website" />
+
+  <style>
+    :root {
+      --indigo: #4f46e5;
+      --indigo-deep: #3730a3;
+      --ink: #1c1c28;
+      --muted: #6b6b7b;
+      --card: #ffffff;
+      --bg: #f4f3fb;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(160deg, #ede9fe 0%, var(--bg) 55%);
+      color: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+      min-height: 100%;
+    }
+    .card {
+      width: 100%; max-width: 420px; background: var(--card);
+      border-radius: 24px; overflow: hidden;
+      box-shadow: 0 18px 50px rgba(55, 48, 163, 0.18);
+    }
+    .cover {
+      width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block;
+      background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+    }
+    .body { padding: 22px 22px 26px; }
+    .brand {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-weight: 700; color: var(--indigo); font-size: 15px; margin-bottom: 12px;
+    }
+    .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--indigo); }
+    h1 { font-size: 23px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.2px; }
+    .meta { color: var(--muted); font-size: 15px; margin: 0 0 22px; }
+    .btn {
+      display: block; width: 100%; text-align: center; text-decoration: none;
+      padding: 15px 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
+      border: none; cursor: pointer; margin-top: 10px;
+    }
+    .btn-primary { background: var(--indigo); color: #fff; }
+    .btn-primary:active { background: var(--indigo-deep); }
+    .btn-store { background: #111; color: #fff; }
+    .hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; }
+    .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <img id="cover" class="cover" alt="" />
+    <div class="body">
+      <span class="brand"><span class="dot"></span> Pinfo</span>
+      <h1 id="title" class="skeleton">Loading event...</h1>
+      <p id="meta" class="meta skeleton">&nbsp;</p>
+
+      <a id="open" class="btn btn-primary" href="#">Open in Pinfo</a>
+      <a id="store" class="btn btn-store" href="#">Get Pinfo on the App Store</a>
+      <p class="hint">Have the app? It will open automatically. Otherwise, download Pinfo to see this event.</p>
+    </div>
+  </main>
+
+  <script>
+    // ---- Config -------------------------------------------------------------
+    var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
+    // Publishable (client-safe) key - same one shipped in the app; RLS still applies.
+    var SUPABASE_KEY = "sb_publishable_ESy4TzFh9kWTef57Bfoufg_D3ZSvKEv";
+    // TODO(owner): set the numeric App Store id once the app is live, e.g. "6478912345".
+    var APPSTORE_ID = "";
+
+    // ---- Event id from the path (/event/<uuid>) or ?id= ---------------------
+    function eventIdFromUrl() {
+      var m = location.pathname.match(/\/event\/([0-9a-fA-F-]{36})/);
+      if (m) return m[1];
+      return new URLSearchParams(location.search).get("id");
+    }
+    var eventId = eventIdFromUrl();
+
+    // ---- Wire the buttons up front (work even if the fetch fails) -----------
+    var storeHref = APPSTORE_ID
+      ? "https://apps.apple.com/app/id" + APPSTORE_ID
+      : "https://apps.apple.com/app/pinfo";
+    document.getElementById("store").href = storeHref;
+
+    if (eventId) {
+      document.getElementById("open").href = "pinfo://event/" + eventId;
+      // keep the smart-banner app-argument pointing at this page
+      var banner = document.getElementById("smart-banner");
+      var base = banner.getAttribute("content");
+      banner.setAttribute("content", base + ", app-argument=" + location.href);
+    }
+
+    // ---- Fetch the event for a richer page ----------------------------------
+    function fmtDate(iso) {
+      if (!iso) return "";
+      try {
+        return new Date(iso).toLocaleString(undefined, {
+          weekday: "short", month: "short", day: "numeric",
+          hour: "2-digit", minute: "2-digit"
+        });
+      } catch (e) { return ""; }
+    }
+
+    function render(ev) {
+      var titleEl = document.getElementById("title");
+      var metaEl = document.getElementById("meta");
+      titleEl.classList.remove("skeleton");
+      metaEl.classList.remove("skeleton");
+      titleEl.textContent = (ev && ev.title) ? ev.title : "View this event on Pinfo";
+      metaEl.textContent = (ev && ev.date_start) ? fmtDate(ev.date_start) : "";
+
+      var cover = ev && (ev.cover_url_app || ev.image_url || ev.cover_url_original);
+      var img = document.getElementById("cover");
+      if (cover) { img.src = cover; img.alt = ev.title || "Event cover"; }
+      else { img.remove(); }
+
+      if (ev && ev.title) {
+        document.title = ev.title + " - Pinfo";
+        document.getElementById("og-title").setAttribute("content", ev.title);
+        if (cover) document.getElementById("og-image").setAttribute("content", cover);
+      }
+    }
+
+    if (eventId) {
+      var url = SUPABASE_URL + "/rest/v1/events?id=eq." + eventId +
+                "&select=title,image_url,cover_url_app,cover_url_original,date_start&limit=1";
+      fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) { render(rows && rows[0]); })
+        .catch(function () { render(null); });
+    } else {
+      render(null);
+    }
+  </script>
+</body>
+</html>
