@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pinfo - Event</title>
 
-  <!-- Smart App Banner. Replace APPSTORE_NUMERIC_ID with the real App Store id
-       once the app is live; the app-argument is filled per-event by the script. -->
-  <meta id="smart-banner" name="apple-itunes-app" content="app-id=APPSTORE_NUMERIC_ID" />
+  <!-- Smart App Banner. The app-argument is filled per-event by the script. -->
+  <meta id="smart-banner" name="apple-itunes-app" content="app-id=6463236759" />
 
   <!-- Open Graph (rich previews when the link is shared in chats/social). Filled
        in by the script with the real title/cover. -->
@@ -84,8 +83,7 @@
     var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
     // Publishable (client-safe) key - same one shipped in the app; RLS still applies.
     var SUPABASE_KEY = "sb_publishable_ESy4TzFh9kWTef57Bfoufg_D3ZSvKEv";
-    // TODO(owner): set the numeric App Store id once the app is live, e.g. "6478912345".
-    var APPSTORE_ID = "";
+    var APPSTORE_ID = "6463236759";
 
     // ---- Event id from the path (/event/<uuid>) or ?id= ---------------------
     function eventIdFromUrl() {
