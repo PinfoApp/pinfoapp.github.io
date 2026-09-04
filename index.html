@@ -1,17 +1,53 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Pinfo - Event Planning Made Easy</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="utf-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Pinfo - Find Events, Nightlife &amp; Gigs Near You</title>
+  <meta name="description" content="Discover what's on near you tonight. Pinfo puts club nights, gigs, festivals and parties across 80 European cities on one map. Free to browse, save and RSVP.">
+  <link rel="canonical" href="https://pinfoapp.com/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pinfoapp.com/">
+  <meta property="og:title" content="Pinfo - Find Events, Nightlife &amp; Gigs Near You">
+  <meta property="og:description" content="Club nights, gigs and parties across 80 European cities, on one map. Free to browse, save and RSVP.">
+  <meta property="og:image" content="https://pinfoapp.com/assets/pinfo-bb.png">
+  <meta property="og:image:alt" content="The Pinfo app icon">
+  <meta property="og:site_name" content="Pinfo">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Pinfo - Find Events, Nightlife &amp; Gigs Near You">
+  <meta name="twitter:description" content="Club nights, gigs and parties across 80 European cities, on one map.">
+  <meta name="twitter:image" content="https://pinfoapp.com/assets/pinfo-bb.png">
+
+  <meta name="apple-itunes-app" content="app-id=6463236759">
+  <link rel="icon" href="/assets/pinfo-bb.png" type="image/png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Pinfo",
+    "operatingSystem": "iOS 17.0 or later",
+    "applicationCategory": "LifestyleApplication",
+    "description": "Discover events near you on a map - club nights, gigs, festivals and parties across 80 European cities. Save events, RSVP, chat, and host your own.",
+    "url": "https://pinfoapp.com/",
+    "downloadUrl": "https://apps.apple.com/app/id6463236759",
+    "installUrl": "https://apps.apple.com/app/id6463236759",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+  }
+  </script>
 </head>
 <body>
     <div id="navbar">
         <a href="./index">
-            <img src="./assets/pinfo-wb.png" id="pinfo-logo-navbar"></img>
+            <img src="./assets/pinfo-wb.png" id="pinfo-logo-navbar" alt="Pinfo"></img>
         </a>
         <p id="navbar-cta">Get started for free</p>
         <div class="button-wrapper" id="header-button-wrapper">
@@ -20,7 +56,8 @@
     </div>
     <div class="pinfo-slide-container">
         <div class="pinfo-slide-flex" id="slide-1">
-            <h1 id="pinfo-header">Event Planning Made Easy</h1>
+            <h1 id="pinfo-header">Find what's on near you tonight</h1>
+            <p id="pinfo-subheader">Club nights, gigs and parties from across the city, on one map - in 80 European cities.</p>
             <div id="carousel">
                 <img class="carousel-img" id="carousel-img-1" src="./assets/s1-img-1.png" alt="">
                 <img class="carousel-img" id="carousel-img-2" src="./assets/s1-img-2.png" alt="">
@@ -69,7 +106,7 @@
                 <img src="./assets/s4-hero.png" alt="" class="slide-img">
             </div>
             <div class="slide-body" id="slide-4-body">
-                <h2>Messagging</h2>
+                <h2>Messaging</h2>
                 <p><b>Connect and communicate</b> with fellow Pinfo users through the Messaging element.</p> 
                 <p>Engage in real-time conversations, <b>exchange information, share event experiences, and build connections</b> within the app's vibrant community.</p> 
                 <p><b>Stay connected</b> and be a part of the event conversation.</p>
@@ -218,7 +255,7 @@
             </div>
             <div id="footer">
                 <a id="footer-logo-container" href="./index">
-                    <img src="./assets/pinfo-black.png" id="pinfo-logo-footer"></img>
+                    <img src="./assets/pinfo-black.png" id="pinfo-logo-footer" alt="Pinfo"></img>
                 </a>
                 <div id="links">      
                     <div class="link-group" id="legal">
@@ -238,3 +275,4 @@
     <script src="./lib/carousel.js"></script>
     <script src="./lib/qna.js"></script>
 </body>
+</html>
