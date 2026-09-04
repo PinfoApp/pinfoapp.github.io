@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "description": "Only /event/<id> is dynamic (functions/event/[id].js). Everything else - the homepage, legal pages, robots.txt, sitemap.xml, and the AASA files - is served as a static asset, never touching the Worker.",
+  "include": ["/event/*"],
+  "exclude": ["/event/", "/event/index.html"]
+}
