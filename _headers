@@ -1,0 +1,16 @@
+# Cloudflare Pages custom headers.
+# https://developers.cloudflare.com/pages/configuration/headers/
+#
+# The Apple App Site Association files drive iOS Universal Links. They must
+# be served with Content-Type: application/json (unlike GitHub Pages, which
+# served them as application/octet-stream - also spec-compliant, but this
+# migration standardizes on the documented Apple-recommended type). These
+# two paths are plain static files - this Pages project has no Function
+# that intercepts them, so this header rule is the only thing that changes
+# their response.
+
+/apple-app-site-association
+  Content-Type: application/json
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json
