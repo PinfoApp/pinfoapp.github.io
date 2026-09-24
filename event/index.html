@@ -69,6 +69,7 @@
     .btn-primary:active { background: var(--indigo-deep); }
     .btn-store { background: #111; color: #fff; }
     .hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; }
+    .hidden { display: none; }
     .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
   </style>
@@ -81,9 +82,14 @@
       <h1 id="title" class="skeleton">Loading event...</h1>
       <p id="meta" class="meta skeleton">&nbsp;</p>
 
-      <a id="open" class="btn btn-primary" href="#">Open in Pinfo</a>
-      <a id="store" class="btn btn-store" href="#">Get Pinfo on the App Store</a>
-      <p class="hint">Have the app? It will open automatically. Otherwise, download Pinfo to see this event.</p>
+      <!-- Only shown for magic invite links (?t=<token> present). The token
+           is never sent anywhere or validated here - claiming an invite
+           happens only inside the app, via an authenticated call. -->
+      <div id="actions" class="hidden">
+        <a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
+        <a id="open-invite" class="btn btn-store" href="#">I have Pinfo - open my invite</a>
+        <p class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
+      </div>
     </div>
   </main>
 
@@ -92,7 +98,6 @@
     var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
     // Publishable (client-safe) key - same one shipped in the app; RLS still applies.
     var SUPABASE_KEY = "sb_publishable_ESy4TzFh9kWTef57Bfoufg_D3ZSvKEv";
-    var APPSTORE_ID = "6463236759";
 
     // ---- Event id from the path (/event/<uuid>) or ?id= ---------------------
     function eventIdFromUrl() {
@@ -104,18 +109,31 @@
 
     document.getElementById("og-url").setAttribute("content", location.href);
 
-    // ---- Wire the buttons up front (work even if the fetch fails) -----------
-    var storeHref = APPSTORE_ID
-      ? "https://apps.apple.com/app/id" + APPSTORE_ID
-      : "https://apps.apple.com/app/pinfo";
-    document.getElementById("store").href = storeHref;
-
     if (eventId) {
-      document.getElementById("open").href = "pinfo://event/" + eventId;
       // keep the smart-banner app-argument pointing at this page
       var banner = document.getElementById("smart-banner");
       var base = banner.getAttribute("content");
       banner.setAttribute("content", base + ", app-argument=" + location.href);
+    }
+
+    // ---- Magic invite links (?t=<token>) -------------------------------------
+    // The token is read only to build the pinfo:// link below - it is never
+    // sent to Supabase or any other endpoint, and never validated here.
+    // Claiming an invite happens only inside the app, via an authenticated
+    // call; if loading this page consumed the invite, a chat app's preview
+    // bot (which fetches the link to build the card) would burn it before
+    // the person ever tapped. Links without ?t= render exactly as before,
+    // with no buttons.
+    //
+    // The button has to use the pinfo:// scheme rather than the https link:
+    // a pinfoapp.com link tapped from a page already on pinfoapp.com stays
+    // in Safari, since Universal Links only fire when coming from another
+    // app.
+    var token = new URLSearchParams(location.search).get("t");
+    if (token && eventId) {
+      document.getElementById("open-invite").href =
+        "pinfo://event/" + eventId + "?t=" + encodeURIComponent(token);
+      document.getElementById("actions").classList.remove("hidden");
     }
 
     // ---- Fetch the event for a richer page ----------------------------------
