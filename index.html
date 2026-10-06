@@ -3,32 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>Pinfo - Find Events, Nightlife &amp; Gigs Near You</title>
-  <meta name="description" content="Discover what's on near you tonight. Pinfo puts club nights, gigs, festivals and parties across 80 European cities on one map. Free to browse, save and RSVP.">
+  <title>Pinfo - See what's on near you tonight</title>
+  <meta name="description" content="New in town? Pinfo shows concerts, parties, art and meetups near you on one map. RSVP in a tap, chat with the people going, and host your own events. Free on iPhone.">
   <link rel="canonical" href="https://pinfoapp.com/">
-
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://pinfoapp.com/">
-  <meta property="og:title" content="Pinfo - Find Events, Nightlife &amp; Gigs Near You">
-  <meta property="og:description" content="Club nights, gigs and parties across 80 European cities, on one map. Free to browse, save and RSVP.">
+  <meta property="og:title" content="Pinfo - See what's on near you tonight">
+  <meta property="og:description" content="Concerts, parties, art and meetups near you, all on one map. Free on iPhone.">
   <meta property="og:image" content="https://pinfoapp.com/assets/pinfo-bb.png">
   <meta property="og:image:alt" content="The Pinfo app icon">
   <meta property="og:site_name" content="Pinfo">
-
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Pinfo - Find Events, Nightlife &amp; Gigs Near You">
-  <meta name="twitter:description" content="Club nights, gigs and parties across 80 European cities, on one map.">
+  <meta name="twitter:title" content="Pinfo - See what's on near you tonight">
+  <meta name="twitter:description" content="Concerts, parties, art and meetups near you, all on one map.">
   <meta name="twitter:image" content="https://pinfoapp.com/assets/pinfo-bb.png">
-
   <meta name="apple-itunes-app" content="app-id=6463236759">
+  <meta name="theme-color" content="#000000">
   <link rel="icon" href="/assets/pinfo-bb.png" type="image/png">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="preload" href="/assets/v2/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
-
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -36,7 +29,7 @@
     "name": "Pinfo",
     "operatingSystem": "iOS 17.0 or later",
     "applicationCategory": "LifestyleApplication",
-    "description": "Discover events near you on a map - club nights, gigs, festivals and parties across 80 European cities. Save events, RSVP, chat, and host your own.",
+    "description": "See what's on near you on one map - concerts, parties, art and meetups. RSVP, chat with the people going, and host your own events.",
     "url": "https://pinfoapp.com/",
     "downloadUrl": "https://apps.apple.com/app/id6463236759",
     "installUrl": "https://apps.apple.com/app/id6463236759",
@@ -45,234 +38,128 @@
   </script>
 </head>
 <body>
-    <div id="navbar">
-        <a href="./index">
-            <img src="./assets/pinfo-wb.png" id="pinfo-logo-navbar" alt="Pinfo"></img>
-        </a>
-        <p id="navbar-cta">Get started for free</p>
-        <div class="button-wrapper" id="header-button-wrapper">
-            <a href="https://apps.apple.com/app/id6463236759" class="button">Get the app</a>
-        </div>
-    </div>
-    <div class="pinfo-slide-container">
-        <div class="pinfo-slide-flex" id="slide-1">
-            <h1 id="pinfo-header">Find what's on near you tonight</h1>
-            <p id="pinfo-subheader">Club nights, gigs and parties from across the city, on one map - in 80 European cities.</p>
-            <div id="carousel">
-                <img class="carousel-img" id="carousel-img-1" src="./assets/s1-img-1.png" alt="">
-                <img class="carousel-img" id="carousel-img-2" src="./assets/s1-img-2.png" alt="">
-                <img class="carousel-img" id="carousel-img-3" src="./assets/s1-img-3.png" alt="">
-                <img class="carousel-img" id="carousel-img-4" src="./assets/s1-img-0.png" alt="">
-                <img class="carousel-img" id="carousel-img-5" src="./assets/s1-img-4.png" alt="">
-                <img class="carousel-img" id="carousel-img-6" src="./assets/s1-img-5.png" alt="">
-                <img class="carousel-img" id="carousel-img-7" src="./assets/s1-img-6.png" alt="">
-            </div>
-        </div>
-        <div class="pinfo-slide" id="slide-2">
-            <div class="img-container">
-                <img src="./assets/s2-hero.png" alt="" id="slide-2-img" class="slide-img">
-            </div>
-            <div class="slide-body" id="slide-2-body">
-                <h2>Discover events near you</h2>
-                <h3>An interactive map for finding what's on</h3>
-                <div id="events-view-list">
-                    <p>Browse a <b>dynamic and interactive map</b> and list view of events.</p>
-                    <p><b>Explore events</b> happening near you or anywhere around the globe.</p>
-                    <p>Navigate through the map to <b>discover events in specific locations, or scroll through the list view</b> for a comprehensive overview of events.</p>
-                </div>
-            </div>
-        </div>
-        <div class="pinfo-slide" id="slide-3">
-            <div class="slide-body" id="slide-3-body">
-                <h2>Host and share your own events</h2>
-                <div id="events-space-list">
-                    <p><b>Create, save, and share events</b> with Pinfo's Events Space.</p>
-                    <p>Whether you're organizing a gathering, promoting a concert, or planning a conference, Pinfo allows you to <b>create events and share them with your desired audience.</b></p>
-                    <p><b>Save events you're interested in attending</b>, ensuring you never miss out on exciting opportunities.</p>
-                </div>
-            </div>
-            <div class="img-container">
-                <img src="./assets/s3-hero.png" alt="" class="slide-img">
-            </div>
-        </div>
-        <div class="pinfo-slide" id="cta-2">
-            <p id="slogan">A world of events at your fingertips</p>
-            <div class="button-wrapper" id="cta-2-button-wrapper">
-                <a href="https://apps.apple.com/app/id6463236759" class="button">Download</a>
-            </div>        
-        </div>
-        <div class="pinfo-slide" id="slide-4">
-            <div class="img-container">
-                <img src="./assets/s4-hero.png" alt="" class="slide-img">
-            </div>
-            <div class="slide-body" id="slide-4-body">
-                <h2>Chat with people going</h2>
-                <p><b>Connect and communicate</b> with fellow Pinfo users through Messaging.</p>
-                <p>Engage in real-time conversations, <b>exchange information, share event experiences, and build connections</b> within the app's vibrant community.</p> 
-                <p><b>Stay connected</b> and be a part of the event conversation.</p>
-            </div>
-        </div>
-        <div class="pinfo-slide" id="slide-5">
-            <div class="slide-body" id="slide-5-body">
-                <h2>Search by city, date, or category</h2>
-                <p>Pinfo's search empowers you to <b>find events that align with your interests.</b></p>
-                <p>Utilize <b>robust search capabilities</b> to discover events based on various criteria, such as location, date, category, and more. </p>
-                <p>Explore a wide range of <b>events tailored to your preferences</b> and expand your event horizons.</p>
-            </div>
-            <div class="img-container">
-                <img src="./assets/s5-hero.png" alt="" class="slide-img">
-            </div>
-        </div>
-        <div class="pinfo-slide" id="slide-6">
-            <div class="img-container">
-                <img src="./assets/s6-hero.png" alt="" class="slide-img">
-            </div>
-            <div class="slide-body" id="slide-6-body">
-                <h2>Settings</h2>
-                <p><b>Customize your app experience</b> and manage your profile from Settings. </p>
-                <p>Access app settings to <b>personalize your preferences, notifications, and privacy settings.</b> </p>
-                <p>Additionally, manage your user profile settings to <b>present yourself uniquely</b> within the Pinfo community.</p>
-            </div>
-        </div>
-        <div id="slide-7">
-            <div id="slide-7-content">
-                <div id="cta">
-                  <h2><a href="https://apps.apple.com/app/id6463236759">Download now!</a></h2>
-                    <a href="https://apps.apple.com/app/id6463236759" id="app-store-button"><img src="./assets/app_store_badge.svg" alt="Download on the App Store"></a>
-                </div>
-                <div id="review-carousel">
-                    <p class="review arrow" id="left-arrow">⟵</p>
-                    <div class="review-wrapper active" id="review-1">
-                        <img src="./assets/chris-jones.png" alt="" class="avatar">
-                        <p class="review">“Pinfo has simplified event planning for me with its intuitive interface and comprehensive features.”</p>
-                        <div id="review-author-container">
-                            <span class="review-author">Chris Jones</span>
-                            <span class="review-author">@chrisjones</span>
-                        </div>
-                    </div>
-                    <div class="review-wrapper disabled" id="review-2">
-                        <img src="./assets/elena-rossi.jpg" alt="" class="avatar">
-                        <p class="review">“With Pinfo, I can effortlessly organize and discover events. It's my go-to app for social planning!”</p>
-                        <div id="review-author-container">
-                            <span class="review-author">Elena Rossi</span>
-                            <span class="review-author">@elenarossi</span>
-                        </div>
-                    </div>
-                    <p class="review arrow" id="right-arrow">⟶</p>
-                </div>
+  <header class="nav">
+    <a href="/" class="brand"><img src="/assets/v2/icon.png" alt="" width="36" height="36"><span>Pinfo</span></a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn small" href="https://apps.apple.com/app/id6463236759">Get the app</a>
+    </nav>
+  </header>
 
-            </div>
+  <main>
+    <section class="hero black">
+      <div class="wrap split">
+        <div class="copy">
+          <h1>New in town?<br>See what's on tonight.</h1>
+          <p class="lead">Concerts, parties, art and meetups near you, all on one map. RSVP in a tap and meet the people going.</p>
+          <div class="cta">
+            <a href="https://apps.apple.com/app/id6463236759" class="badge"><img src="/assets/app_store_badge.svg" alt="Download on the App Store" height="56"></a>
+            <span class="note">Free on iPhone</span>
+          </div>
         </div>
-        <div class="pinfo-slide" id="slide-8">
-            <div id="slide-8-container">
-                <h2 id="faq">FAQ</h2>
-                <div id="slide-8-faq">
-                    <div id="slide-8-questions">
-                        <div id="question-container">
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-1">
-                                    What types of events can I find on Pinfo?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Pinfo offers a broad range of events worldwide, including music festivals, art exhibitions, conferences, and local gatherings, catering to diverse interests.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-2">
-                                    How does Pinfo help me with event planning?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>The app allows users to save events directly to their calendar, helping them manage their schedules and ensure they never miss out on important events.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-3">
-                                    Can I interact with other event-goers on Pinfo?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Yes, Pinfo includes a community feature where users can engage in real-time conversations, share tips, and exchange event experiences.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-4">
-                                    How personalized are the event recommendations on Pinfo?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Our advanced algorithms provide personalized event recommendations based on user preferences and interests, enhancing the event discovery process.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-5">
-                                    Is it possible to create and promote my own events on Pinfo?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Users can create and share their own events using the Events Space element, making it easy to promote events to the appropriate audience.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-6">
-                                    How can I manage my privacy and notifications in Pinfo?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Pinfo allows users to customize privacy settings and manage notifications through the app’s Settings element, ensuring a personalized and secure experience.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-7">
-                                    What makes Pinfo unique compared to other event apps?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Pinfo uniquely integrates event discovery, planning, and community interaction in one platform, offering a comprehensive tool for all event-related needs.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-8">
-                                    How does the Events View work?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>The Events View feature offers a dynamic map and list view, enabling users to explore events by location or through a comprehensive list overview.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-9">
-                                    How do I download Pinfo?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Pinfo is live on the App Store. <a href="https://apps.apple.com/app/id6463236759">Download it here</a> to get started.</p>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <div class="question-header" id="q-10">
-                                    Are there any costs associated with using Pinfo?
-                                </div>
-                                <div class="accordion-content">
-                                    <p>Pinfo is free to download and use. Future premium features will be clearly indicated within the app for users who opt for additional functionalities.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="footer">
-                <a id="footer-logo-container" href="./index">
-                    <img src="./assets/pinfo-black.png" id="pinfo-logo-footer" alt="Pinfo"></img>
-                </a>
-                <div id="links">      
-                    <div class="link-group" id="legal">
-                        <p class="footer-category">Legal</p>
-                        <a href="./tos"><p class="footer-element">TOS</p></a>
-                        <a href="/site-notice"><p class="footer-element">Site notice</p></a>
-                        <a href="/privacy"><p class="footer-element">Privacy</p></a>
-                    </div>
-                    <div class="link-group" id="resources">
-                        <p class="footer-category">Resources</p>
-                        <a class="footer-element" href="./index#faq">FAQ</a>
-                    </div>
-                </div>
-            </div>
+        <div class="art"><img src="/assets/v2/hero-map.webp" alt="The Pinfo map of Berlin with event cards for tonight" width="900" height="1301" fetchpriority="high"></div>
+      </div>
+    </section>
+
+    <section id="features" class="feature purple">
+      <div class="wrap split">
+        <div class="art"><img src="/assets/v2/weekend.webp" alt="This weekend near you, grouped into nightlife, live music and talks" width="900" height="1574" loading="lazy"></div>
+        <div class="copy">
+          <span class="kicker">For you</span>
+          <h2>Your weekend, sorted.</h2>
+          <p>Picks near you, grouped by the kind of night you want: nightlife, live music, talks and meetups. Open the app on a Friday and the plan is already there.</p>
         </div>
+      </div>
+    </section>
+
+    <section class="feature black">
+      <div class="wrap split reverse">
+        <div class="art"><img src="/assets/v2/tap-a-spot.webp" alt="Tapping a pin on the map shows its events as cards" width="900" height="1589" loading="lazy"></div>
+        <div class="copy">
+          <span class="kicker">The map</span>
+          <h2>Tap a spot, see what's there.</h2>
+          <p>Every pin opens straight into its events. Filter by this week, free or soonest, and switch to a list when you'd rather scroll.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature purple">
+      <div class="wrap split">
+        <div class="art"><img src="/assets/v2/event.webp" alt="An event page with date, place, distance and host" width="900" height="1589" loading="lazy"></div>
+        <div class="copy">
+          <span class="kicker">Event pages</span>
+          <h2>Know before you go.</h2>
+          <p>Time, place, distance and who's hosting at a glance. Save it, say you're going, add it to your calendar and get directions.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature black">
+      <div class="wrap split reverse">
+        <div class="art"><img src="/assets/v2/host.webp" alt="A host sees who is going to their event" width="900" height="1589" loading="lazy"></div>
+        <div class="copy">
+          <span class="kicker">Hosting</span>
+          <h2>Host your own, see who's coming.</h2>
+          <p>Create a public or private event in a minute. Invite friends from your contacts or with a link, see every reply, and send one announcement to everyone going.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature purple">
+      <div class="wrap split">
+        <div class="art"><img src="/assets/v2/chat.webp" alt="An event group chat with message notifications" width="900" height="1574" loading="lazy"></div>
+        <div class="copy">
+          <span class="kicker">Event Spaces</span>
+          <h2>Meet the people going.</h2>
+          <p>Every event gets a group chat for everyone who's in. Message people one to one, reply, react and share photos, so you walk in already knowing someone.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="steps black">
+      <div class="wrap">
+        <h2 class="center">Three taps to a plan</h2>
+        <ol>
+          <li><b>Open the map.</b><span>See what's on around you tonight, this weekend or this week.</span></li>
+          <li><b>Pick something.</b><span>Save it, or say you're going. Bring a friend with a +1.</span></li>
+          <li><b>Show up.</b><span>Chat with the people going and get directions when it's time.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="faq" class="faq">
+      <div class="wrap narrow">
+        <h2 class="center">Questions</h2>
+        <details><summary>Is Pinfo free?</summary><p>Yes. Browsing, saving, RSVPs, chat and hosting your first event are free. Hosting more than one event at a time needs a subscription (1.99 EUR a month).</p></details>
+        <details><summary>Do I need an account?</summary><p>No account is needed to browse the map. To RSVP, chat or host, sign in with your phone number - no password.</p></details>
+        <details><summary>Which cities does Pinfo cover?</summary><p>Pinfo lists events in 99 cities, most of them in Europe, and anyone can host an event anywhere.</p></details>
+        <details><summary>Where do the events come from?</summary><p>From public event listings and from people hosting on Pinfo. Every event page links to its source.</p></details>
+        <details><summary>How do private events work?</summary><p>Only the people you invite can see a private event. Invite them from your contacts or send a personal link; you see who is going, who might come and who hasn't answered yet.</p></details>
+        <details><summary>Is there an Android app?</summary><p>Not yet - Pinfo is on iPhone for now.</p></details>
+        <details><summary>How is my data handled?</summary><p>We only use what the app needs to work. Read the <a href="/privacy">privacy policy</a> for the details.</p></details>
+      </div>
+    </section>
+
+    <section class="final purple">
+      <div class="wrap center">
+        <img src="/assets/v2/icon.png" alt="" width="96" height="96" class="final-icon">
+        <h2>See what's on tonight.</h2>
+        <a href="https://apps.apple.com/app/id6463236759" class="badge"><img src="/assets/app_store_badge.svg" alt="Download on the App Store" height="56"></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <a href="/" class="brand"><img src="/assets/v2/icon.png" alt="" width="28" height="28"><span>Pinfo</span></a>
+      <nav>
+        <a href="/tos">Terms</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/site-notice">Site notice</a>
+        <a href="mailto:pinfoapp@gmail.com">Contact</a>
+      </nav>
     </div>
-    <script src="./lib/carousel.js"></script>
-    <script src="./lib/qna.js"></script>
+  </footer>
 </body>
 </html>
