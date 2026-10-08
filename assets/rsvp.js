@@ -30,17 +30,16 @@
   var APPSTORE_URL = "https://apps.apple.com/app/id6463236759";
 
   // ---- Firebase (group-link phone step) --------------------------------
-  // The owner needs to register a Web app in the pinfo-2023 Firebase
-  // project and paste its apiKey/appId here (see README.md for exactly
-  // where). Until that happens, firebaseConfigured() is false and the
-  // phone step shows a "not ready yet" message instead of a broken form -
-  // every other screen (personal links, all status screens, the install
-  // screen, the Smart App Banner) works fully without it.
+  // Public web config, safe in browser code. No Analytics here on purpose:
+  // the site does not track visitors and avoids needing a cookie-consent
+  // banner for it.
   var FIREBASE_CONFIG = {
-    apiKey: "",
+    apiKey: "AIzaSyA7U9tmXAuh4mSrbiiuEbbpxaVXLCKKPWQ",
     authDomain: "pinfo-2023.firebaseapp.com",
     projectId: "pinfo-2023",
-    appId: ""
+    storageBucket: "pinfo-2023.appspot.com",
+    messagingSenderId: "440194580123",
+    appId: "1:440194580123:web:c8bef0be13a96b5701103e"
   };
   var FIREBASE_SDK_VERSION = "10.14.1";
 
