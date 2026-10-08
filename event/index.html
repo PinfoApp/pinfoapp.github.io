@@ -72,10 +72,69 @@
     .hidden { display: none; }
     .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+    /* ---- RSVP flow (/i/<token> invite links) ---------------------------- */
+    .rsvp-screen { display: flex; flex-direction: column; gap: 12px; }
+    .rsvp-heading { font-size: 19px; line-height: 1.3; margin: 4px 0 0; font-weight: 700; }
+    .install-heading { margin-top: 8px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .field-error { color: #c0392b; font-size: 13px; margin: -4px 0 0; }
+    .input {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e3e1f3;
+      font-size: 16px; font-family: inherit; background: #fbfaff; color: var(--ink);
+    }
+    .input:focus { outline: 2px solid var(--indigo); outline-offset: 1px; }
+    .phone-row { flex-direction: row; gap: 8px; }
+    .input-country { width: 86px; flex: none; }
+    .input-phone { flex: 1; }
+    .input-code { letter-spacing: 4px; font-size: 20px; text-align: center; }
+    .chip-row { display: flex; gap: 8px; }
+    .chip {
+      padding: 8px 14px; border-radius: 999px; border: 1px solid #e3e1f3; background: #fbfaff;
+      color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer;
+    }
+    .chip-active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+    .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-answer { flex: 1 1 0; min-width: 90px; margin-top: 0; }
+    .btn-going { background: var(--indigo); color: #fff; }
+    .btn-maybe { background: #f2f0fb; color: var(--ink); }
+    .btn-cant { background: #f2f0fb; color: var(--muted); }
+    .already-said { font-weight: 600; font-size: 14px; margin: 0; }
+    .hint-left { color: var(--muted); font-size: 13px; margin: -6px 0 0; }
+    .privacy-line { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 6px; }
+    .address-card {
+      background: #f7f6fd; border-radius: 14px; padding: 14px 16px; display: flex;
+      flex-direction: column; gap: 6px;
+    }
+    .address-title { font-weight: 700; margin: 0; }
+    .address-line { color: var(--muted); margin: 0; font-size: 14px; }
+    .guest-count { font-size: 13px; color: var(--muted); margin: 0; }
+    .guest-list { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+    .guest-row { display: flex; align-items: center; gap: 10px; }
+    .guest-avatar {
+      width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e3e1f3;
+      display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+      color: var(--indigo); flex: none;
+    }
+    .guest-name { font-size: 14px; }
+    .change-answer-link { color: var(--indigo); font-size: 13px; text-align: center; margin-top: 4px; }
+    .install-block { border-top: 1px solid #ece9f6; margin-top: 18px; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+    .install-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .install-line { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink); }
+    .install-line .dot { width: 6px; height: 6px; margin-top: 7px; border-radius: 50%; background: var(--indigo); flex: none; }
+    .install-btn { margin-top: 4px; }
+    .open-invite-link { text-align: center; color: var(--indigo); font-size: 13px; }
+    .qr-code { display: block; margin: 6px auto 0; border-radius: 8px; }
+    .qr-caption { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+    .install-cant-line { color: var(--muted); font-size: 13px; text-align: center; }
+    .install-cant-line a { color: var(--indigo); font-weight: 600; }
   </style>
 </head>
 <body>
-  <main class="card" role="main">
+  <!-- /event/<uuid> and /e/<code>: the simple "view event, open the app"
+       card. Unchanged from before the web RSVP flow was added. -->
+  <main class="card" id="simple-card" role="main">
     <img id="cover" class="cover" alt="" />
     <div class="body">
       <span class="brand"><span class="dot"></span> Pinfo</span>
@@ -93,6 +152,22 @@
     </div>
   </main>
 
+  <!-- /i/<token>: the web RSVP flow. Hidden and empty until
+       assets/rsvp.js (loaded only for this route) initializes it - see
+       assets/rsvp.js for the full state machine. The event never gets
+       claimed or validated by loading this page: a chat app's
+       link-preview bot fetching this URL to build a card never answers
+       anything, since answering is a deliberate tap on a button below. -->
+  <main class="card hidden" id="rsvp-root" role="main">
+    <img id="rsvp-cover" class="cover" alt="" />
+    <div class="body">
+      <span class="brand"><span class="dot"></span> Pinfo</span>
+      <h1 id="rsvp-title" class="skeleton">Loading event...</h1>
+      <p id="rsvp-meta" class="meta skeleton">&nbsp;</p>
+      <div id="rsvp-content"></div>
+    </div>
+  </main>
+
   <script>
     // ---- Config -------------------------------------------------------------
     var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
@@ -100,6 +175,16 @@
     var SUPABASE_KEY = "sb_publishable_ESy4TzFh9kWTef57Bfoufg_D3ZSvKEv";
 
     document.getElementById("og-url").setAttribute("content", location.href);
+
+    // Smart App Banner: set the app-argument to this exact page's URL as
+    // early as possible (synchronously, before any network call), so
+    // Safari has it before the page finishes loading - this covers
+    // /event/, /e/, and /i/ pages alike.
+    (function () {
+      var banner = document.getElementById("smart-banner");
+      var base = banner.getAttribute("content").split(",")[0];
+      banner.setAttribute("content", base + ", app-argument=" + location.href);
+    })();
 
     // ---- Which route is this? -------------------------------------------------
     // Three link shapes all land on this same page:
@@ -173,12 +258,6 @@
       document.getElementById("actions").classList.remove("hidden");
     }
 
-    function setSmartBannerTarget(url) {
-      var banner = document.getElementById("smart-banner");
-      var base = banner.getAttribute("content");
-      banner.setAttribute("content", base + ", app-argument=" + url);
-    }
-
     // ---- Render the page from event data -------------------------------------
     function fmtDate(iso) {
       if (!iso) return "";
@@ -225,7 +304,6 @@
     // (unknown code, unknown/expired token, bad or missing path) renders the
     // generic "not found" card - never an error, never a guessed link.
     function finish(id, token, preloadedEv) {
-      if (id) setSmartBannerTarget(location.href);
       if (id && token) activateInvite(id, token);
 
       if (preloadedEv !== undefined) {
@@ -245,17 +323,21 @@
         finish(typeof id === "string" && id ? id : null, null);
       });
     } else if (route.kind === "invite") {
-      supabaseRpc("get_invite_preview", { _token: route.token }).then(function (preview) {
-        if (preview && preview.event_id) {
-          finish(preview.event_id, route.token, {
-            title: preview.title,
-            date_start: preview.date_start,
-            image_url: preview.image_url
-          });
-        } else {
-          finish(null, null);
-        }
-      });
+      // The full web RSVP flow (see docs/README for the write-up): swap
+      // from the simple card to the RSVP container and hand off to
+      // assets/rsvp.js, loaded only for this route so /event/ and /e/
+      // visitors never pay for it.
+      document.getElementById("simple-card").classList.add("hidden");
+      var rsvpRoot = document.getElementById("rsvp-root");
+      rsvpRoot.classList.remove("hidden");
+      var script = document.createElement("script");
+      script.src = "/assets/rsvp.js";
+      script.onload = function () { window.PinfoRsvp.init(rsvpRoot, route.token); };
+      script.onerror = function () {
+        rsvpRoot.querySelector("#rsvp-content").textContent =
+          "Couldn't reach Pinfo. Check your connection and try again.";
+      };
+      document.head.appendChild(script);
     } else {
       finish(null, null);
     }
