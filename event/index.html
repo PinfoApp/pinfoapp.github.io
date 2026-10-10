@@ -1,33 +1,36 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Pinfo - Event</title>
+&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8" /&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" /&gt;
+  &lt;title&gt;Pinfo - Event&lt;/title&gt;
 
-  <!-- Smart App Banner. The app-argument is filled per-event by the script. -->
-  <meta id="smart-banner" name="apple-itunes-app" content="app-id=6463236759" />
+  &lt;!-- Smart App Banner. The app-argument is filled per-event by the script. --&gt;
+  &lt;meta id="smart-banner" name="apple-itunes-app" content="app-id=6463236759" /&gt;
 
-  <!-- Open Graph (rich previews when the link is shared in chats/social). Filled
-       in by the script with the real title/cover. -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" id="og-url" content="https://pinfoapp.com/" />
-  <meta property="og:title" id="og-title" content="An event on Pinfo" />
-  <meta property="og:description" id="og-description" content="Discover events near you on Pinfo." />
-  <meta property="og:image" id="og-image" content="https://pinfoapp.com/assets/pinfo-bb.png" />
-  <meta property="og:site_name" content="Pinfo" />
+  &lt;!-- Open Graph (rich previews when the link is shared in chats/social). Filled
+       in by the script with the real title/cover. --&gt;
+  &lt;meta property="og:type" content="website" /&gt;
+  &lt;meta property="og:url" id="og-url" content="https://pinfoapp.com/" /&gt;
+  &lt;meta property="og:title" id="og-title" content="An event on Pinfo" /&gt;
+  &lt;meta property="og:description" id="og-description" content="Discover events near you on Pinfo." /&gt;
+  &lt;meta property="og:image" id="og-image" content="https://pinfoapp.com/assets/pinfo-bb.png" /&gt;
+  &lt;meta property="og:site_name" content="Pinfo" /&gt;
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" id="twitter-title" content="An event on Pinfo" />
-  <meta name="twitter:description" id="twitter-description" content="Discover events near you on Pinfo." />
-  <meta name="twitter:image" id="twitter-image" content="https://pinfoapp.com/assets/pinfo-bb.png" />
+  &lt;meta name="twitter:card" content="summary_large_image" /&gt;
+  &lt;meta name="twitter:title" id="twitter-title" content="An event on Pinfo" /&gt;
+  &lt;meta name="twitter:description" id="twitter-description" content="Discover events near you on Pinfo." /&gt;
+  &lt;meta name="twitter:image" id="twitter-image" content="https://pinfoapp.com/assets/pinfo-bb.png" /&gt;
 
-  <link rel="icon" href="/assets/pinfo-bb.png" type="image/png">
+  &lt;link rel="icon" href="/assets/pinfo-bb.png" type="image/png"&gt;
 
-  <style>
+  &lt;style&gt;
     :root {
       --indigo: #4f46e5;
       --indigo-deep: #3730a3;
+      --install-purple: #6b4eff;
+      --install-purple-deep: #5a3fe0;
+      --install-tint: #f1eeff;
       --ink: #1c1c28;
       --muted: #6b6b7b;
       --card: #ffffff;
@@ -73,7 +76,7 @@
     .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 
-    /* ---- RSVP flow (/i/<token> invite links) ---------------------------- */
+    /* ---- RSVP flow (/i/&lt;token&gt; invite links) ---------------------------- */
     .rsvp-screen { display: flex; flex-direction: column; gap: 12px; }
     .rsvp-heading { font-size: 19px; line-height: 1.3; margin: 4px 0 0; font-weight: 700; }
     .install-heading { margin-top: 8px; }
@@ -119,56 +122,65 @@
     }
     .guest-name { font-size: 14px; }
     .change-answer-link { color: var(--indigo); font-size: 13px; text-align: center; margin-top: 4px; }
-    .install-block { border-top: 1px solid #ece9f6; margin-top: 18px; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
-    .install-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .install-block {
+      margin-top: 18px; padding: 22px 18px; border-radius: 18px;
+      background: var(--install-tint); display: flex; flex-direction: column;
+      align-items: center; gap: 10px; text-align: center;
+    }
+    .install-icon { width: 64px; height: 64px; border-radius: 14px; display: block; background: #fff; }
+    .install-heading { margin: 2px 0 0; font-size: 22px; font-weight: 800; text-align: center; }
+    .install-lines { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; }
     .install-line { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink); }
-    .install-line .dot { width: 6px; height: 6px; margin-top: 7px; border-radius: 50%; background: var(--indigo); flex: none; }
-    .install-btn { margin-top: 4px; }
+    .install-line .check { color: var(--install-purple); font-weight: 700; flex: none; line-height: 1.4; }
+    .install-btn {
+      width: 100%; min-height: 52px; padding: 17px 16px; margin-top: 4px;
+      border-radius: 14px; background: var(--install-purple); color: #fff; font-weight: 700;
+    }
+    .install-btn:active { background: var(--install-purple-deep); }
+    .install-block .hint { margin-top: 2px; }
     .open-invite-link { text-align: center; color: var(--indigo); font-size: 13px; }
     .qr-code { display: block; margin: 6px auto 0; border-radius: 8px; }
     .qr-caption { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
-    .install-cant-line { color: var(--muted); font-size: 13px; text-align: center; }
-    .install-cant-line a { color: var(--indigo); font-weight: 600; }
-  </style>
-</head>
-<body>
-  <!-- /event/<uuid> and /e/<code>: the simple "view event, open the app"
-       card. Unchanged from before the web RSVP flow was added. -->
-  <main class="card" id="simple-card" role="main">
-    <img id="cover" class="cover" alt="" />
-    <div class="body">
-      <span class="brand"><span class="dot"></span> Pinfo</span>
-      <h1 id="title" class="skeleton">Loading event...</h1>
-      <p id="meta" class="meta skeleton">&nbsp;</p>
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- /event/&lt;uuid&gt; and /e/&lt;code&gt;: the simple "view event, open the app"
+       card. Unchanged from before the web RSVP flow was added. --&gt;
+  &lt;main class="card" id="simple-card" role="main"&gt;
+    &lt;img id="cover" class="cover" alt="" /&gt;
+    &lt;div class="body"&gt;
+      &lt;span class="brand"&gt;&lt;span class="dot"&gt;&lt;/span&gt; Pinfo&lt;/span&gt;
+      &lt;h1 id="title" class="skeleton"&gt;Loading event...&lt;/h1&gt;
+      &lt;p id="meta" class="meta skeleton"&gt;&amp;nbsp;&lt;/p&gt;
 
-      <!-- Only shown for magic invite links (?t=<token> present). The token
+      &lt;!-- Only shown for magic invite links (?t=&lt;token&gt; present). The token
            is never sent anywhere or validated here - claiming an invite
-           happens only inside the app, via an authenticated call. -->
-      <div id="actions" class="hidden">
-        <a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
-        <a id="open-invite" class="btn btn-store" href="#">I have Pinfo - open my invite</a>
-        <p class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
-      </div>
-    </div>
-  </main>
+           happens only inside the app, via an authenticated call. --&gt;
+      &lt;div id="actions" class="hidden"&gt;
+        &lt;a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759"&gt;Get Pinfo&lt;/a&gt;
+        &lt;a id="open-invite" class="btn btn-store" href="#"&gt;I have Pinfo - open my invite&lt;/a&gt;
+        &lt;p class="hint"&gt;Installed Pinfo? Tap 'open my invite' to join.&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/main&gt;
 
-  <!-- /i/<token>: the web RSVP flow. Hidden and empty until
+  &lt;!-- /i/&lt;token&gt;: the web RSVP flow. Hidden and empty until
        assets/rsvp.js (loaded only for this route) initializes it - see
        assets/rsvp.js for the full state machine. The event never gets
        claimed or validated by loading this page: a chat app's
        link-preview bot fetching this URL to build a card never answers
-       anything, since answering is a deliberate tap on a button below. -->
-  <main class="card hidden" id="rsvp-root" role="main">
-    <img id="rsvp-cover" class="cover" alt="" />
-    <div class="body">
-      <span class="brand"><span class="dot"></span> Pinfo</span>
-      <h1 id="rsvp-title" class="skeleton">Loading event...</h1>
-      <p id="rsvp-meta" class="meta skeleton">&nbsp;</p>
-      <div id="rsvp-content"></div>
-    </div>
-  </main>
+       anything, since answering is a deliberate tap on a button below. --&gt;
+  &lt;main class="card hidden" id="rsvp-root" role="main"&gt;
+    &lt;img id="rsvp-cover" class="cover" alt="" /&gt;
+    &lt;div class="body"&gt;
+      &lt;span class="brand"&gt;&lt;span class="dot"&gt;&lt;/span&gt; Pinfo&lt;/span&gt;
+      &lt;h1 id="rsvp-title" class="skeleton"&gt;Loading event...&lt;/h1&gt;
+      &lt;p id="rsvp-meta" class="meta skeleton"&gt;&amp;nbsp;&lt;/p&gt;
+      &lt;div id="rsvp-content"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/main&gt;
 
-  <script>
+  &lt;script&gt;
     // ---- Config -------------------------------------------------------------
     var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
     // Publishable (client-safe) key - same one shipped in the app; RLS still applies.
@@ -188,9 +200,9 @@
 
     // ---- Which route is this? -------------------------------------------------
     // Three link shapes all land on this same page:
-    //   /event/<uuid>            - direct event link, optionally with ?t=<token>
-    //   /e/<code>                - short link, 8 chars from a base32-like alphabet
-    //   /i/<token>                - invite link (new 10-char token, or a legacy
+    //   /event/&lt;uuid&gt;            - direct event link, optionally with ?t=&lt;token&gt;
+    //   /e/&lt;code&gt;                - short link, 8 chars from a base32-like alphabet
+    //   /i/&lt;token&gt;                - invite link (new 10-char token, or a legacy
     //                                24-character url-safe token)
     // Everything below resolves whichever shape matched down to a plain
     // { id, token, ev } before rendering, so the rest of the page never needs
@@ -205,10 +217,10 @@
       if ((m = path.match(/\/event\/([0-9a-fA-F-]{36})/))) {
         return { kind: "event", id: m[1] };
       }
-      if ((m = path.match(/\/e\/([^\/?#]+)/)) && CODE_RE.test(m[1])) {
+      if ((m = path.match(/\/e\/([^\/?#]+)/)) &amp;&amp; CODE_RE.test(m[1])) {
         return { kind: "code", code: m[1] };
       }
-      if ((m = path.match(/\/i\/([^\/?#]+)/)) && (NEW_TOKEN_RE.test(m[1]) || LEGACY_TOKEN_RE.test(m[1]))) {
+      if ((m = path.match(/\/i\/([^\/?#]+)/)) &amp;&amp; (NEW_TOKEN_RE.test(m[1]) || LEGACY_TOKEN_RE.test(m[1]))) {
         return { kind: "invite", token: m[1] };
       }
       var qid = new URLSearchParams(location.search).get("id");
@@ -231,14 +243,14 @@
 
     function fetchEventById(id) {
       var url = SUPABASE_URL + "/rest/v1/events?id=eq." + id +
-                "&select=title,image_url,cover_url_app,cover_url_original,date_start&limit=1";
+                "&amp;select=title,image_url,cover_url_app,cover_url_original,date_start&amp;limit=1";
       return fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
         .then(function (r) { return r.ok ? r.json() : []; })
-        .then(function (rows) { return rows && rows[0]; })
+        .then(function (rows) { return rows &amp;&amp; rows[0]; })
         .catch(function () { return null; });
     }
 
-    // ---- Magic invite links (?t=<token> or /i/<token>) -------------------------
+    // ---- Magic invite links (?t=&lt;token&gt; or /i/&lt;token&gt;) -------------------------
     // The token is read only to build the pinfo:// link below - it is never
     // sent to Supabase or any other endpoint (get_invite_preview takes only
     // the token itself, never anything that would "claim" it), and it is
@@ -274,15 +286,15 @@
       var metaEl = document.getElementById("meta");
       titleEl.classList.remove("skeleton");
       metaEl.classList.remove("skeleton");
-      titleEl.textContent = (ev && ev.title) ? ev.title : "View this event on Pinfo";
-      metaEl.textContent = (ev && ev.date_start) ? fmtDate(ev.date_start) : "";
+      titleEl.textContent = (ev &amp;&amp; ev.title) ? ev.title : "View this event on Pinfo";
+      metaEl.textContent = (ev &amp;&amp; ev.date_start) ? fmtDate(ev.date_start) : "";
 
-      var cover = ev && (ev.cover_url_app || ev.image_url || ev.cover_url_original);
+      var cover = ev &amp;&amp; (ev.cover_url_app || ev.image_url || ev.cover_url_original);
       var img = document.getElementById("cover");
       if (cover) { img.src = cover; img.alt = ev.title || "Event cover"; }
       else { img.remove(); }
 
-      if (ev && ev.title) {
+      if (ev &amp;&amp; ev.title) {
         document.title = ev.title + " - Pinfo";
         var description = ev.date_start ? "On Pinfo - " + fmtDate(ev.date_start) : "Discover this event on Pinfo.";
         document.getElementById("og-title").setAttribute("content", ev.title);
@@ -298,13 +310,13 @@
 
     // Finishes the page for a resolved (or unresolved) event: wires up the
     // smart banner and invite buttons if there's an id/token, then renders
-    // either the already-known event data (preloadedEv, used for /i/<token>
+    // either the already-known event data (preloadedEv, used for /i/&lt;token&gt;
     // since get_invite_preview already returns exactly what's needed) or
-    // fetches it by id (used for /event/<uuid> and /e/<code>). No id at all
+    // fetches it by id (used for /event/&lt;uuid&gt; and /e/&lt;code&gt;). No id at all
     // (unknown code, unknown/expired token, bad or missing path) renders the
     // generic "not found" card - never an error, never a guessed link.
     function finish(id, token, preloadedEv) {
-      if (id && token) activateInvite(id, token);
+      if (id &amp;&amp; token) activateInvite(id, token);
 
       if (preloadedEv !== undefined) {
         render(preloadedEv);
@@ -320,7 +332,7 @@
       finish(route.id, new URLSearchParams(location.search).get("t"));
     } else if (route.kind === "code") {
       supabaseRpc("resolve_event_code", { _code: route.code }).then(function (id) {
-        finish(typeof id === "string" && id ? id : null, null);
+        finish(typeof id === "string" &amp;&amp; id ? id : null, null);
       });
     } else if (route.kind === "invite") {
       // The full web RSVP flow (see docs/README for the write-up): swap
@@ -341,6 +353,6 @@
     } else {
       finish(null, null);
     }
-  </script>
-</body>
-</html>
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
