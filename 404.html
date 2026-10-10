@@ -28,6 +28,9 @@
     :root {
       --indigo: #4f46e5;
       --indigo-deep: #3730a3;
+      --install-purple: #6b4eff;
+      --install-purple-deep: #5a3fe0;
+      --install-tint: #f1eeff;
       --ink: #1c1c28;
       --muted: #6b6b7b;
       --card: #ffffff;
@@ -119,16 +122,25 @@
     }
     .guest-name { font-size: 14px; }
     .change-answer-link { color: var(--indigo); font-size: 13px; text-align: center; margin-top: 4px; }
-    .install-block { border-top: 1px solid #ece9f6; margin-top: 18px; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
-    .install-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .install-block {
+      margin-top: 18px; padding: 22px 18px; border-radius: 18px;
+      background: var(--install-tint); display: flex; flex-direction: column;
+      align-items: center; gap: 10px; text-align: center;
+    }
+    .install-icon { width: 64px; height: 64px; border-radius: 14px; display: block; background: #fff; }
+    .install-heading { margin: 2px 0 0; font-size: 22px; font-weight: 800; text-align: center; }
+    .install-lines { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; }
     .install-line { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink); }
-    .install-line .dot { width: 6px; height: 6px; margin-top: 7px; border-radius: 50%; background: var(--indigo); flex: none; }
-    .install-btn { margin-top: 4px; }
+    .install-line .check { color: var(--install-purple); font-weight: 700; flex: none; line-height: 1.4; }
+    .install-btn {
+      width: 100%; min-height: 52px; padding: 17px 16px; margin-top: 4px;
+      border-radius: 14px; background: var(--install-purple); color: #fff; font-weight: 700;
+    }
+    .install-btn:active { background: var(--install-purple-deep); }
+    .install-block .hint { margin-top: 2px; }
     .open-invite-link { text-align: center; color: var(--indigo); font-size: 13px; }
     .qr-code { display: block; margin: 6px auto 0; border-radius: 8px; }
     .qr-caption { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
-    .install-cant-line { color: var(--muted); font-size: 13px; text-align: center; }
-    .install-cant-line a { color: var(--indigo); font-weight: 600; }
   </style>
 </head>
 <body>
