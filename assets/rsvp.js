@@ -97,20 +97,31 @@
       changeAnswer: "Change my answer",
       openInMaps: "Open in Maps",
       guestCount: function (going, maybe) { return going + " going, " + maybe + " maybe"; },
-      installHeading: "Get the Pinfo app for this event",
-      installLines: [
-        "Chat with the other guests in the event chat",
-        "Get updates and changes from {host} as push notifications",
-        "A reminder before it starts",
-        "See the photos afterwards"
+      installHeadingGoing: "You're going! Get Pinfo for this event",
+      installLinesGoing: [
+        "Chat with the other guests before it starts",
+        "Get {host}'s updates if the time or place changes",
+        "A reminder before it starts, and the photos afterwards"
       ],
-      installButton: "Get Pinfo",
+      installHeadingMaybe: "Still deciding? Get Pinfo",
+      installLinesMaybe: [
+        "Get an update if anything changes",
+        "Switch to Going in one tap when you know",
+        "See who else is going and chat with them"
+      ],
+      installHeadingCant: function (host) { return "Don't miss " + host + "'s next one"; },
+      installLinesCant: [
+        "Get {host}'s next invite straight in the app",
+        "Find what's on in {city} this week",
+        "Plan your own event in seconds, just by talking"
+      ],
+      installButton: "Get Pinfo, it's free",
       installSubPersonal: function (host) { return "Sign in with the phone number " + host + " invited and the event is already waiting for you."; },
       installSubGroup: function (number) { return "Sign in with " + number + " and the event is already waiting for you."; },
+      installSubCant: "Free on iPhone. Takes a minute to set up.",
       openMyInvite: "I have Pinfo, open my invitation",
       qrCaption: "Scan with your iPhone camera",
-      androidNote: "Pinfo is on iPhone for now. Your answer is saved either way.",
-      cantGoInstall: "Find more events like this in the Pinfo app"
+      androidNote: "Pinfo is on iPhone for now. Your answer is saved either way."
     },
     de: {
       invalid: "Dieser Einladungslink ist nicht mehr gültig.",
@@ -155,20 +166,31 @@
       changeAnswer: "Antwort ändern",
       openInMaps: "In Karten öffnen",
       guestCount: function (going, maybe) { return going + " dabei, " + maybe + " vielleicht"; },
-      installHeading: "Hol dir die Pinfo-App für dieses Event",
-      installLines: [
-        "Chatte mit den anderen Gästen im Event-Chat",
-        "Bekomme Updates und Änderungen von {host} als Push",
-        "Eine Erinnerung vor dem Start",
-        "Sieh die Fotos danach"
+      installHeadingGoing: "Du bist dabei! Hol dir Pinfo für dieses Event",
+      installLinesGoing: [
+        "Chatte schon vorher mit den anderen Gästen",
+        "Bekomme Updates von {host}, wenn sich Zeit oder Ort ändern",
+        "Eine Erinnerung vor dem Start und die Fotos danach"
       ],
-      installButton: "Pinfo laden",
+      installHeadingMaybe: "Noch unsicher? Hol dir Pinfo",
+      installLinesMaybe: [
+        "Bekomme ein Update, wenn sich etwas ändert",
+        "Mit einem Tipp auf Dabei wechseln, sobald du es weißt",
+        "Sieh, wer noch kommt, und chatte mit ihnen"
+      ],
+      installHeadingCant: function (host) { return "Verpass nicht das nächste Event von " + host; },
+      installLinesCant: [
+        "Bekomme die nächste Einladung von {host} direkt in der App",
+        "Finde, was diese Woche in {city} los ist",
+        "Plane dein eigenes Event in Sekunden, einfach per Sprache"
+      ],
+      installButton: "Pinfo laden, kostenlos",
       installSubPersonal: function (host) { return "Melde dich mit der Telefonnummer an, mit der " + host + " dich eingeladen hat, und das Event wartet schon auf dich."; },
       installSubGroup: function (number) { return "Melde dich mit " + number + " an und das Event wartet schon auf dich."; },
+      installSubCant: "Kostenlos für iPhone. In einer Minute eingerichtet.",
       openMyInvite: "Ich habe Pinfo, meine Einladung öffnen",
       qrCaption: "Mit der iPhone-Kamera scannen",
-      androidNote: "Pinfo gibt es vorerst nur für das iPhone. Deine Antwort ist trotzdem gespeichert.",
-      cantGoInstall: "Finde mehr Events wie dieses in der Pinfo-App"
+      androidNote: "Pinfo gibt es vorerst nur für das iPhone. Deine Antwort ist trotzdem gespeichert."
     }
   };
   var S = STRINGS[LOCALE];
@@ -671,18 +693,40 @@
     clear(contentEl);
     var ev = data.event || {};
     var guests = data.guests || {};
-    var children = [];
 
     var thankText = data.response === "going" ? S.thankGoing
       : data.response === "maybe" ? S.thankMaybe
         : S.thankCant((ev && ev.host_name) || "");
-    children.push(el("h2", { class: "rsvp-heading", text: thankText }));
 
+    contentEl.appendChild(card([
+      el("h2", { class: "rsvp-heading", text: thankText }),
+      el("a", {
+        class: "change-answer-link", href: "#",
+        text: S.changeAnswer,
+        onclick: function (e) {
+          e.preventDefault();
+          rsvpStatus(token, authCtx && authCtx.idToken).then(function (res) {
+            if (res.timedOut) return renderNetworkError(function () { renderThankYou(token, data, authCtx); });
+            if (res.data && (res.data.status === "ok" || res.data.status === "not_responded")) {
+              // Re-fetch preview-shaped context for the form (host name, link_kind, limits).
+              previewInvite(token).then(function (rows) {
+                var preview = rows && rows[0];
+                if (preview) renderAnswerForm(token, preview, authCtx, { alreadyResponse: data.response });
+              });
+            }
+          });
+        }
+      })
+    ]));
+
+    appendInstallBlock(contentEl, { response: data.response, event: ev, authCtx: authCtx, token: token, eventId: ev.id });
+
+    var detailChildren = [];
     if (ev.location && (data.response === "going" || data.response === "maybe")) {
       var loc = ev.location;
       var mapsHref = "https://maps.apple.com/?q=" + encodeURIComponent(loc.address || loc.title || "") +
         (loc.latitude && loc.longitude ? "&ll=" + loc.latitude + "," + loc.longitude : "");
-      children.push(el("div", { class: "address-card" }, [
+      detailChildren.push(el("div", { class: "address-card" }, [
         el("p", { class: "address-title", text: loc.title || "" }),
         el("p", { class: "address-line", text: loc.address || "" }),
         el("a", { class: "btn btn-store", href: mapsHref, target: "_blank", rel: "noopener", text: S.openInMaps })
@@ -690,70 +734,60 @@
     }
 
     if (guests.visible && guests.list && guests.list.length && (data.response === "going" || data.response === "maybe")) {
-      children.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
+      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
       var list = el("div", { class: "guest-list" }, guests.list.slice(0, 30).map(function (g) {
         var avatar = g.avatar_url
           ? el("img", { class: "guest-avatar", src: g.avatar_url, alt: "" })
           : el("span", { class: "guest-avatar guest-avatar-initial", text: (g.name || "?").charAt(0).toUpperCase() });
         return el("div", { class: "guest-row" }, [avatar, el("span", { class: "guest-name", text: g.name || "" })]);
       }));
-      children.push(list);
+      detailChildren.push(list);
     } else if (data.response === "going" || data.response === "maybe") {
-      children.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
+      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
     }
 
-    children.push(el("a", {
-      class: "change-answer-link", href: "#",
-      text: S.changeAnswer,
-      onclick: function (e) {
-        e.preventDefault();
-        rsvpStatus(token, authCtx && authCtx.idToken).then(function (res) {
-          if (res.timedOut) return renderNetworkError(function () { renderThankYou(token, data, authCtx); });
-          if (res.data && (res.data.status === "ok" || res.data.status === "not_responded")) {
-            // Re-fetch preview-shaped context for the form (host name, link_kind, limits).
-            previewInvite(token).then(function (rows) {
-              var preview = rows && rows[0];
-              if (preview) renderAnswerForm(token, preview, authCtx, { alreadyResponse: data.response });
-            });
-          }
-        });
-      }
-    }));
-
-    contentEl.appendChild(card(children));
-    appendInstallBlock(contentEl, { response: data.response, event: ev, authCtx: authCtx, token: token, eventId: ev.id });
+    if (detailChildren.length) contentEl.appendChild(card(detailChildren));
   }
 
   // ---- Install screen (section 7.10 / section 8) -------------------------
+  // Shown after every successful answer (Going, Maybe, and Can't go alike)
+  // and on the "already answered" state - never in front of the RSVP
+  // buttons. This is the main growth moment: visitors whose browser isn't
+  // Safari never see the Smart App Banner, so this in-page pitch is the
+  // only install nudge most of them get.
   function appendInstallBlock(container, ctx) {
     var response = ctx.response;
-    var block = el("div", { class: "install-block" });
-
-    if (response === "cant") {
-      block.appendChild(el("p", { class: "install-cant-line" }, [
-        S.cantGoInstall + " ",
-        el("a", { href: APPSTORE_URL, text: S.installButton })
-      ]));
-      container.appendChild(block);
-      return;
-    }
-
-    block.appendChild(el("h2", { class: "rsvp-heading install-heading", text: S.installHeading }));
-    var lines = el("ul", { class: "install-lines" }, S.installLines.map(function (line) {
-      var text = line.replace("{host}", (ctx.event && ctx.event.host_name) || (ctx.preview && ctx.preview.host_name) || "");
-      return el("li", { class: "install-line" }, [el("span", { class: "dot" }), el("span", { text: text })]);
-    }));
-    block.appendChild(lines);
-
     var host = (ctx.event && ctx.event.host_name) || (ctx.preview && ctx.preview.host_name) || "";
+    var city = (ctx.event && ctx.event.area) || (ctx.preview && ctx.preview.area) || "";
     var isPersonal = ctx.preview ? ctx.preview.link_kind === "personal" : !(ctx.authCtx && ctx.authCtx.phoneDisplay);
 
+    var headingTemplate, lines, subText;
+    if (response === "going") {
+      headingTemplate = S.installHeadingGoing;
+      lines = S.installLinesGoing;
+      subText = isPersonal ? S.installSubPersonal(host) : S.installSubGroup((ctx.authCtx && ctx.authCtx.phoneDisplay) || "");
+    } else if (response === "cant") {
+      headingTemplate = S.installHeadingCant(host);
+      lines = S.installLinesCant;
+      subText = S.installSubCant;
+    } else {
+      headingTemplate = S.installHeadingMaybe;
+      lines = S.installLinesMaybe;
+      subText = isPersonal ? S.installSubPersonal(host) : S.installSubGroup((ctx.authCtx && ctx.authCtx.phoneDisplay) || "");
+    }
+
+    var block = el("div", { class: "install-block" });
+    block.appendChild(el("img", { class: "install-icon", src: "/assets/v2/icon.png", alt: "", width: "64", height: "64" }));
+    block.appendChild(el("h2", { class: "rsvp-heading install-heading", text: headingTemplate.replace("{host}", host) }));
+    var linesList = el("ul", { class: "install-lines" }, lines.map(function (line) {
+      var text = line.replace("{host}", host).replace("{city}", city);
+      return el("li", { class: "install-line" }, [el("span", { class: "check", text: "✓" }), el("span", { text: text })]);
+    }));
+    block.appendChild(linesList);
+
     if (isIOS()) {
-      block.appendChild(el("a", { class: "btn btn-primary install-btn", href: APPSTORE_URL, text: S.installButton }));
-      var sub = isPersonal
-        ? S.installSubPersonal(host)
-        : S.installSubGroup((ctx.authCtx && ctx.authCtx.phoneDisplay) || "");
-      block.appendChild(el("p", { class: "hint", text: sub }));
+      block.appendChild(el("a", { class: "btn install-btn", href: APPSTORE_URL, text: S.installButton }));
+      block.appendChild(el("p", { class: "hint", text: subText }));
       if (ctx.eventId && ctx.token) {
         block.appendChild(el("a", {
           class: "open-invite-link", href: "pinfo://event/" + ctx.eventId + "?t=" + encodeURIComponent(ctx.token),
