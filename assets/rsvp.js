@@ -28,6 +28,7 @@
   var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
   var SUPABASE_KEY = "sb_publishable_ESy4TzFh9kWTef57Bfoufg_D3ZSvKEv";
   var APPSTORE_URL = "https://apps.apple.com/app/id6463236759";
+  var COVER_PLACEHOLDER = "/assets/cover-placeholder.svg";
 
   // ---- Firebase (group-link phone step) --------------------------------
   // Public web config, safe in browser code. No Analytics here on purpose:
@@ -81,7 +82,8 @@
       btnMaybe: "Maybe",
       btnCant: "Can't go",
       privacyPersonal: function (host) { return "Your answer is shared with " + host + "."; },
-      privacyGroup: "We use your number only to confirm it's you and to carry your answer into Pinfo if you join with it. We delete it 90 days after the event. Details: https://pinfoapp.com/privacy",
+      privacyGroupPrefix: "We use your number only to confirm it's you and to carry your answer into Pinfo if you join with it. We delete it 90 days after the event. Details in our ",
+      privacyPolicyLinkText: "privacy policy",
       phoneLabel: "Phone number",
       sendCode: "Send code",
       codeLabel: "Enter the 6-digit code",
@@ -150,7 +152,8 @@
       btnMaybe: "Vielleicht",
       btnCant: "Kann nicht",
       privacyPersonal: function (host) { return "Deine Antwort wird mit " + host + " geteilt."; },
-      privacyGroup: "Wir verwenden deine Nummer nur, um zu bestätigen, dass du es bist, und um deine Antwort zu Pinfo zu übertragen, falls du dich damit anmeldest. Wir löschen sie 90 Tage nach der Veranstaltung. Details: https://pinfoapp.com/privacy",
+      privacyGroupPrefix: "Wir verwenden deine Nummer nur, um zu bestätigen, dass du es bist, und um deine Antwort zu Pinfo zu übertragen, falls du dich damit anmeldest. Wir löschen sie 90 Tage nach der Veranstaltung. Details in unserer ",
+      privacyPolicyLinkText: "Datenschutzerklärung",
       phoneLabel: "Telefonnummer",
       sendCode: "Code senden",
       codeLabel: "Gib den 6-stelligen Code ein",
@@ -368,8 +371,16 @@
     var where = preview && preview.area ? preview.area : "";
     headerMeta.textContent = [when, where].filter(Boolean).join(" - ");
     var cover = preview && (preview.cover_url || preview.image_url);
-    if (cover) { headerCover.src = cover; headerCover.alt = preview.title || ""; }
-    else { headerCover.style.display = "none"; }
+    headerCover.src = cover || COVER_PLACEHOLDER;
+    headerCover.alt = (preview && preview.title) || "";
+  }
+
+  function privacyGroupLine() {
+    return el("p", { class: "privacy-line" }, [
+      S.privacyGroupPrefix,
+      el("a", { href: "https://pinfoapp.com/privacy", target: "_blank", rel: "noopener", text: S.privacyPolicyLinkText }),
+      "."
+    ]);
   }
 
   function card(children) {
@@ -505,7 +516,7 @@
     }
 
     if (!isPersonal) {
-      children.push(el("p", { class: "privacy-line", text: S.privacyGroup }));
+      children.push(privacyGroupLine());
     } else {
       children.push(el("p", { class: "privacy-line", text: S.privacyPersonal(preview.host_name || "") }));
     }
@@ -561,7 +572,7 @@
       errorEl,
       sendBtn,
       recaptchaDiv,
-      el("p", { class: "privacy-line", text: S.privacyGroup })
+      privacyGroupLine()
     ]));
   }
 
