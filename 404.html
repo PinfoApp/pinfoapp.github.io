@@ -72,7 +72,7 @@
     .btn-primary:active { background: var(--indigo-deep); }
     .btn-store { background: #111; color: #fff; }
     .hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; }
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 
@@ -106,6 +106,7 @@
     .already-said { font-weight: 600; font-size: 14px; margin: 0; }
     .hint-left { color: var(--muted); font-size: 13px; margin: -6px 0 0; }
     .privacy-line { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 6px; }
+    .privacy-line a { color: var(--indigo); font-weight: 600; }
     .address-card {
       background: #f7f6fd; border-radius: 14px; padding: 14px 16px; display: flex;
       flex-direction: column; gap: 6px;
@@ -160,6 +161,17 @@
         <a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
         <a id="open-invite" class="btn btn-store" href="#">I have Pinfo - open my invite</a>
         <p class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
+      </div>
+
+      <!-- Shown instead of #actions when the event id/code can't be
+           resolved (unknown, cancelled, or private to this visitor). Never
+           an error page - still a normal 200 with the generic link-preview
+           tags in <head>, so a private event's details are never leaked to
+           a crawler. -->
+      <div id="not-found-actions" class="hidden">
+        <a id="not-found-btn" class="btn btn-primary hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo, it's free</a>
+        <img id="not-found-qr" class="qr-code hidden" src="/assets/appstore-qr.svg" alt="Scan with your iPhone camera" width="180" height="180" />
+        <p id="not-found-qr-caption" class="qr-caption hidden">Scan with your iPhone camera</p>
       </div>
     </div>
   </main>
@@ -281,20 +293,50 @@
       } catch (e) { return ""; }
     }
 
-    function render(ev) {
+    function isIOS() {
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) return true;
+      // iPadOS reports as "Mac" with touch support.
+      return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    }
+
+    // No id could be resolved to an event: unknown id/code, a cancelled or
+    // private event, or an expired link. Never an error - a normal card
+    // explaining that and pointing at the app, with the generic
+    // link-preview tags from <head> left untouched so nothing about a
+    // private event ever reaches a crawler.
+    function renderNotFound() {
       var titleEl = document.getElementById("title");
       var metaEl = document.getElementById("meta");
       titleEl.classList.remove("skeleton");
       metaEl.classList.remove("skeleton");
-      titleEl.textContent = (ev && ev.title) ? ev.title : "View this event on Pinfo";
-      metaEl.textContent = (ev && ev.date_start) ? fmtDate(ev.date_start) : "";
+      titleEl.textContent = "This event isn't available";
+      metaEl.textContent = "It may be private, cancelled, or the link may be wrong. If someone invited you, ask them to send the link again.";
+      document.getElementById("cover").remove();
+      document.getElementById("not-found-actions").classList.remove("hidden");
+      if (isIOS()) {
+        document.getElementById("not-found-btn").classList.remove("hidden");
+      } else {
+        document.getElementById("not-found-qr").classList.remove("hidden");
+        document.getElementById("not-found-qr-caption").classList.remove("hidden");
+      }
+    }
 
-      var cover = ev && (ev.cover_url_app || ev.image_url || ev.cover_url_original);
+    function render(ev) {
+      if (!ev) { renderNotFound(); return; }
+
+      var titleEl = document.getElementById("title");
+      var metaEl = document.getElementById("meta");
+      titleEl.classList.remove("skeleton");
+      metaEl.classList.remove("skeleton");
+      titleEl.textContent = ev.title || "View this event on Pinfo";
+      metaEl.textContent = ev.date_start ? fmtDate(ev.date_start) : "";
+
+      var cover = ev.cover_url_app || ev.image_url || ev.cover_url_original;
       var img = document.getElementById("cover");
       if (cover) { img.src = cover; img.alt = ev.title || "Event cover"; }
       else { img.remove(); }
 
-      if (ev && ev.title) {
+      if (ev.title) {
         document.title = ev.title + " - Pinfo";
         var description = ev.date_start ? "On Pinfo - " + fmtDate(ev.date_start) : "Discover this event on Pinfo.";
         document.getElementById("og-title").setAttribute("content", ev.title);
