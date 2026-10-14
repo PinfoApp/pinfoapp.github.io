@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>After The Party: InCorrupto Edition Launch Party - Pinfo</title>
+
+  <!-- Smart App Banner. The app-argument is filled per-event by the script. -->
+  <meta id="smart-banner" name="apple-itunes-app" content="app-id=6463236759" />
+
+  <!-- Open Graph (rich previews when the link is shared in chats/social).
+       Pre-rendered for this one event so chat-app crawlers (which don't run
+       JS) see the real title/cover instead of the generic card - see
+       README "SEO / link previews" for why /e/ and /event/ otherwise can't
+       do this on GitHub Pages. Still refreshed client-side by the script
+       below for anyone who opens the link in a browser. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" id="og-url" content="https://pinfoapp.com/e/srbqd2rd" />
+  <meta property="og:title" id="og-title" content="After The Party: InCorrupto Edition Launch Party" />
+  <meta property="og:description" id="og-description" content="Tonight, Wed 14 Oct, 19:00 to 24:00 at Neue Odessa Bar, Torstraße 89, Berlin. Free taster before 9 pm. On Pinfo." />
+  <meta property="og:image" id="og-image" content="https://pinfoapp.com/assets/e-srbqd2rd-cover.jpg" />
+  <meta property="og:site_name" content="Pinfo" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" id="twitter-title" content="After The Party: InCorrupto Edition Launch Party" />
+  <meta name="twitter:description" id="twitter-description" content="Tonight, Wed 14 Oct, 19:00 to 24:00 at Neue Odessa Bar, Torstraße 89, Berlin. Free taster before 9 pm. On Pinfo." />
+  <meta name="twitter:image" id="twitter-image" content="https://pinfoapp.com/assets/e-srbqd2rd-cover.jpg" />
+
+  <link rel="icon" href="/assets/pinfo-bb.png" type="image/png">
+
+  <style>
+    :root {
+      --indigo: #4f46e5;
+      --indigo-deep: #3730a3;
+      --install-purple: #6b4eff;
+      --install-purple-deep: #5a3fe0;
+      --install-tint: #f1eeff;
+      --ink: #1c1c28;
+      --muted: #6b6b7b;
+      --card: #ffffff;
+      --bg: #f4f3fb;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(160deg, #ede9fe 0%, var(--bg) 55%);
+      color: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+      min-height: 100%;
+    }
+    .card {
+      width: 100%; max-width: 420px; background: var(--card);
+      border-radius: 24px; overflow: hidden;
+      box-shadow: 0 18px 50px rgba(55, 48, 163, 0.18);
+    }
+    .cover {
+      width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block;
+      background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+    }
+    .body { padding: 22px 22px 26px; }
+    .brand {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-weight: 700; color: var(--indigo); font-size: 15px; margin-bottom: 12px;
+    }
+    .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--indigo); }
+    h1 { font-size: 23px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.2px; }
+    .meta { color: var(--muted); font-size: 15px; margin: 0 0 22px; }
+    .btn {
+      display: block; width: 100%; text-align: center; text-decoration: none;
+      padding: 15px 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
+      border: none; cursor: pointer; margin-top: 10px;
+    }
+    .btn-primary { background: var(--indigo); color: #fff; }
+    .btn-primary:active { background: var(--indigo-deep); }
+    .btn-store { background: #111; color: #fff; }
+    .hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; }
+    .hidden { display: none !important; }
+    .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+    /* ---- RSVP flow (/i/<token> invite links) ---------------------------- */
+    .rsvp-screen { display: flex; flex-direction: column; gap: 12px; }
+    .rsvp-heading { font-size: 19px; line-height: 1.3; margin: 4px 0 0; font-weight: 700; }
+    .install-heading { margin-top: 8px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .field-error { color: #c0392b; font-size: 13px; margin: -4px 0 0; }
+    .input {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e3e1f3;
+      font-size: 16px; font-family: inherit; background: #fbfaff; color: var(--ink);
+    }
+    .input:focus { outline: 2px solid var(--indigo); outline-offset: 1px; }
+    .phone-row { flex-direction: row; gap: 8px; }
+    .input-country { width: 86px; flex: none; }
+    .input-phone { flex: 1; }
+    .input-code { letter-spacing: 4px; font-size: 20px; text-align: center; }
+    .chip-row { display: flex; gap: 8px; }
+    .chip {
+      padding: 8px 14px; border-radius: 999px; border: 1px solid #e3e1f3; background: #fbfaff;
+      color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer;
+    }
+    .chip-active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+    .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-answer { flex: 1 1 0; min-width: 90px; margin-top: 0; }
+    .btn-going { background: var(--indigo); color: #fff; }
+    .btn-maybe { background: #f2f0fb; color: var(--ink); }
+    .btn-cant { background: #f2f0fb; color: var(--muted); }
+    .already-said { font-weight: 600; font-size: 14px; margin: 0; }
+    .hint-left { color: var(--muted); font-size: 13px; margin: -6px 0 0; }
+    .privacy-line { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 6px; }
+    .privacy-line a { color: var(--indigo); font-weight: 600; }
+    .address-card {
+      background: #f7f6fd; border-radius: 14px; padding: 14px 16px; display: flex;
+      flex-direction: column; gap: 6px;
+    }
+    .address-title { font-weight: 700; margin: 0; }
+    .address-line { color: var(--muted); margin: 0; font-size: 14px; }
+    .guest-count { font-size: 13px; color: var(--muted); margin: 0; }
+    .guest-list { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+    .guest-row { display: flex; align-items: center; gap: 10px; }
+    .guest-avatar {
+      width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e3e1f3;
+      display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+      color: var(--indigo); flex: none;
+    }
+    .guest-name { font-size: 14px; }
+    .change-answer-link { color: var(--indigo); font-size: 13px; text-align: center; margin-top: 4px; }
+    .install-block {
+      margin-top: 18px; padding: 22px 18px; border-radius: 18px;
+      background: var(--install-tint); display: flex; flex-direction: column;
+      align-items: center; gap: 10px; text-align: center;
+    }
+    .install-icon { width: 64px; height: 64px; border-radius: 14px; display: block; background: #fff; }
+    .install-heading { margin: 2px 0 0; font-size: 22px; font-weight: 800; text-align: center; }
+    .install-lines { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; }
+    .install-line { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink); }
+    .install-line .check { color: var(--install-purple); font-weight: 700; flex: none; line-height: 1.4; }
+    .install-btn {
+      width: 100%; min-height: 52px; padding: 17px 16px; margin-top: 4px;
+      border-radius: 14px; background: var(--install-purple); color: #fff; font-weight: 700;
+    }
+    .install-btn:active { background: var(--install-purple-deep); }
+    .install-block .hint { margin-top: 2px; }
+    .open-invite-link { text-align: center; color: var(--indigo); font-size: 13px; }
+    .qr-code { display: block; margin: 6px auto 0; border-radius: 8px; }
+    .qr-caption { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+  </style>
+</head>
+<body>
+  <!-- /event/<uuid> and /e/<code>: the simple "view event, open the app"
+       card. Unchanged from before the web RSVP flow was added. -->
+  <main class="card" id="simple-card" role="main">
+    <img id="cover" class="cover" alt="" />
+    <div class="body">
+      <span class="brand"><span class="dot"></span> Pinfo</span>
+      <h1 id="title" class="skeleton">Loading event...</h1>
+      <p id="meta" class="meta skeleton">&nbsp;</p>
+
+      <!-- Only shown for magic invite links (?t=<token> present). The token
+           is never sent anywhere or validated here - claiming an invite
+           happens only inside the app, via an authenticated call. -->
+      <div id="actions" class="hidden">
+        <a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
+        <a id="open-invite" class="btn btn-store" href="#">I have Pinfo - open my invite</a>
+        <p class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
+      </div>
+
+      <!-- Shown instead of #actions when the event id/code can't be
+           resolved (unknown, cancelled, or private to this visitor). Never
+           an error page - still a normal 200 with the generic link-preview
+           tags in <head>, so a private event's details are never leaked to
+           a crawler. -->
+      <div id="not-found-actions" class="hidden">
+        <a id="not-found-btn" class="btn btn-primary hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo, it's free</a>
+        <img id="not-found-qr" class="qr-code hidden" src="/assets/appstore-qr.svg" alt="Scan with your iPhone camera" width="180" height="180" />
+        <p id="not-found-qr-caption" class="qr-caption hidden">Scan with your iPhone camera</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- /i/<token>: the web RSVP flow. Hidden and empty until
+       assets/rsvp.js (loaded only for this route) initializes it - see
+       assets/rsvp.js for the full state machine. The event never gets
+       claimed or validated by loading this page: a chat app's
+       link-preview bot fetching this URL to build a card never answers
+       anything, since answering is a deliberate tap on a button below. -->
+  <main class="card hidden" id="rsvp-root" role="main">
+    <img id="rsvp-cover" class="cover" alt="" />
+    <div class="body">
+      <span class="brand"><span class="dot"></span> Pinfo</span>
+      <h1 id="rsvp-title" class="skeleton">Loading event...</h1>
+      <p id="rsvp-meta" class="meta skeleton">&nbsp;</p>
+      <div id="rsvp-content"></div>
+    </div>
+  </main>
+
+  <script>
+    // ---- Config -------------------------------------------------------------
+    var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
+    // Publishable (client-safe) key - same one shipped in the app; RLS still applies.
+    var SUPABASE_KEY = "sb_publishable_ESy4TzFh9kWTef57Bfoufg_D3ZSvKEv";
+
+    document.getElementById("og-url").setAttribute("content", location.href);
+
+    // Smart App Banner: set the app-argument to this exact page's URL as
+    // early as possible (synchronously, before any network call), so
+    // Safari has it before the page finishes loading - this covers
+    // /event/, /e/, and /i/ pages alike.
+    (function () {
+      var banner = document.getElementById("smart-banner");
+      var base = banner.getAttribute("content").split(",")[0];
+      banner.setAttribute("content", base + ", app-argument=" + location.href);
+    })();
+
+    // ---- Which route is this? -------------------------------------------------
+    // Three link shapes all land on this same page:
+    //   /event/<uuid>            - direct event link, optionally with ?t=<token>
+    //   /e/<code>                - short link, 8 chars from a base32-like alphabet
+    //   /i/<token>                - invite link (new 10-char token, or a legacy
+    //                                24-character url-safe token)
+    // Everything below resolves whichever shape matched down to a plain
+    // { id, token, ev } before rendering, so the rest of the page never needs
+    // to know which URL shape got it there.
+    var CODE_RE = /^[23456789abcdefghjkmnpqrstuvwxyz]{8}$/;
+    var NEW_TOKEN_RE = /^[23456789abcdefghjkmnpqrstuvwxyz]{10}$/;
+    var LEGACY_TOKEN_RE = /^[A-Za-z0-9_-]{24}$/;
+
+    function parseRoute() {
+      var path = location.pathname;
+      var m;
+      if ((m = path.match(/\/event\/([0-9a-fA-F-]{36})/))) {
+        return { kind: "event", id: m[1] };
+      }
+      if ((m = path.match(/\/e\/([^\/?#]+)/)) && CODE_RE.test(m[1])) {
+        return { kind: "code", code: m[1] };
+      }
+      if ((m = path.match(/\/i\/([^\/?#]+)/)) && (NEW_TOKEN_RE.test(m[1]) || LEGACY_TOKEN_RE.test(m[1]))) {
+        return { kind: "invite", token: m[1] };
+      }
+      var qid = new URLSearchParams(location.search).get("id");
+      if (qid) return { kind: "event", id: qid };
+      return { kind: "none" };
+    }
+
+    function supabaseRpc(name, body) {
+      return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    }
+
+    function fetchEventById(id) {
+      var url = SUPABASE_URL + "/rest/v1/events?id=eq." + id +
+                "&select=title,image_url,cover_url_app,cover_url_original,date_start&limit=1";
+      return fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) { return rows && rows[0]; })
+        .catch(function () { return null; });
+    }
+
+    // ---- Magic invite links (?t=<token> or /i/<token>) -------------------------
+    // The token is read only to build the pinfo:// link below - it is never
+    // sent to Supabase or any other endpoint (get_invite_preview takes only
+    // the token itself, never anything that would "claim" it), and it is
+    // never validated here. Claiming an invite happens only inside the app,
+    // via an authenticated call; if loading this page consumed the invite, a
+    // chat app's preview bot (which fetches the link to build the card)
+    // would burn it before the person ever tapped. Links without a token
+    // render with no buttons, exactly as before.
+    //
+    // The button has to use the pinfo:// scheme rather than the https link:
+    // a pinfoapp.com link tapped from a page already on pinfoapp.com stays
+    // in Safari, since Universal Links only fire when coming from another
+    // app.
+    function activateInvite(id, token) {
+      document.getElementById("open-invite").href =
+        "pinfo://event/" + id + "?t=" + encodeURIComponent(token);
+      document.getElementById("actions").classList.remove("hidden");
+    }
+
+    // ---- Render the page from event data -------------------------------------
+    function fmtDate(iso) {
+      if (!iso) return "";
+      try {
+        return new Date(iso).toLocaleString(undefined, {
+          weekday: "short", month: "short", day: "numeric",
+          hour: "2-digit", minute: "2-digit"
+        });
+      } catch (e) { return ""; }
+    }
+
+    function isIOS() {
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) return true;
+      // iPadOS reports as "Mac" with touch support.
+      return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    }
+
+    // No id could be resolved to an event: unknown id/code, a cancelled or
+    // private event, or an expired link. Never an error - a normal card
+    // explaining that and pointing at the app, with the generic
+    // link-preview tags from <head> left untouched so nothing about a
+    // private event ever reaches a crawler.
+    function renderNotFound() {
+      var titleEl = document.getElementById("title");
+      var metaEl = document.getElementById("meta");
+      titleEl.classList.remove("skeleton");
+      metaEl.classList.remove("skeleton");
+      titleEl.textContent = "This event isn't available";
+      metaEl.textContent = "It may be private, cancelled, or the link may be wrong. If someone invited you, ask them to send the link again.";
+      document.getElementById("cover").remove();
+      document.getElementById("not-found-actions").classList.remove("hidden");
+      if (isIOS()) {
+        document.getElementById("not-found-btn").classList.remove("hidden");
+      } else {
+        document.getElementById("not-found-qr").classList.remove("hidden");
+        document.getElementById("not-found-qr-caption").classList.remove("hidden");
+      }
+    }
+
+    function render(ev) {
+      if (!ev) { renderNotFound(); return; }
+
+      var titleEl = document.getElementById("title");
+      var metaEl = document.getElementById("meta");
+      titleEl.classList.remove("skeleton");
+      metaEl.classList.remove("skeleton");
+      titleEl.textContent = ev.title || "View this event on Pinfo";
+      metaEl.textContent = ev.date_start ? fmtDate(ev.date_start) : "";
+
+      var cover = ev.cover_url_app || ev.image_url || ev.cover_url_original;
+      var img = document.getElementById("cover");
+      if (cover) { img.src = cover; img.alt = ev.title || "Event cover"; }
+      else { img.remove(); }
+
+      if (ev.title) {
+        document.title = ev.title + " - Pinfo";
+        var description = ev.date_start ? "On Pinfo - " + fmtDate(ev.date_start) : "Discover this event on Pinfo.";
+        document.getElementById("og-title").setAttribute("content", ev.title);
+        document.getElementById("og-description").setAttribute("content", description);
+        document.getElementById("twitter-title").setAttribute("content", ev.title);
+        document.getElementById("twitter-description").setAttribute("content", description);
+        if (cover) {
+          document.getElementById("og-image").setAttribute("content", cover);
+          document.getElementById("twitter-image").setAttribute("content", cover);
+        }
+      }
+    }
+
+    // Finishes the page for a resolved (or unresolved) event: wires up the
+    // smart banner and invite buttons if there's an id/token, then renders
+    // either the already-known event data (preloadedEv, used for /i/<token>
+    // since get_invite_preview already returns exactly what's needed) or
+    // fetches it by id (used for /event/<uuid> and /e/<code>). No id at all
+    // (unknown code, unknown/expired token, bad or missing path) renders the
+    // generic "not found" card - never an error, never a guessed link.
+    function finish(id, token, preloadedEv) {
+      if (id && token) activateInvite(id, token);
+
+      if (preloadedEv !== undefined) {
+        render(preloadedEv);
+      } else if (id) {
+        fetchEventById(id).then(render);
+      } else {
+        render(null);
+      }
+    }
+
+    var route = parseRoute();
+    if (route.kind === "event") {
+      finish(route.id, new URLSearchParams(location.search).get("t"));
+    } else if (route.kind === "code") {
+      supabaseRpc("resolve_event_code", { _code: route.code }).then(function (id) {
+        finish(typeof id === "string" && id ? id : null, null);
+      });
+    } else if (route.kind === "invite") {
+      // The full web RSVP flow (see docs/README for the write-up): swap
+      // from the simple card to the RSVP container and hand off to
+      // assets/rsvp.js, loaded only for this route so /event/ and /e/
+      // visitors never pay for it.
+      document.getElementById("simple-card").classList.add("hidden");
+      var rsvpRoot = document.getElementById("rsvp-root");
+      rsvpRoot.classList.remove("hidden");
+      var script = document.createElement("script");
+      script.src = "/assets/rsvp.js";
+      script.onload = function () { window.PinfoRsvp.init(rsvpRoot, route.token); };
+      script.onerror = function () {
+        rsvpRoot.querySelector("#rsvp-content").textContent =
+          "Couldn't reach Pinfo. Check your connection and try again.";
+      };
+      document.head.appendChild(script);
+    } else {
+      finish(null, null);
+    }
+  </script>
+</body>
+</html>
