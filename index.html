@@ -3,47 +3,126 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pinfo - See what's on near you tonight</title>
+  <title>Pinfo: events near you tonight, on one map</title>
   <meta name="description" content="New in town? Pinfo shows concerts, parties, art and meetups near you on one map. RSVP in a tap, chat with the people going, and host your own events. Free on iPhone.">
   <link rel="canonical" href="https://pinfoapp.com/">
+  <link rel="alternate" hreflang="en" href="https://pinfoapp.com/">
+  <link rel="alternate" hreflang="de" href="https://pinfoapp.com/de/">
+  <link rel="alternate" hreflang="x-default" href="https://pinfoapp.com/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://pinfoapp.com/">
-  <meta property="og:title" content="Pinfo - See what's on near you tonight">
+  <meta property="og:title" content="Pinfo: events near you tonight, on one map">
   <meta property="og:description" content="Concerts, parties, art and meetups near you, all on one map. Free on iPhone.">
   <meta property="og:image" content="https://pinfoapp.com/assets/pinfo-bb.png">
   <meta property="og:image:alt" content="The Pinfo app icon">
   <meta property="og:site_name" content="Pinfo">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="de_DE">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Pinfo - See what's on near you tonight">
+  <meta name="twitter:title" content="Pinfo: events near you tonight, on one map">
   <meta name="twitter:description" content="Concerts, parties, art and meetups near you, all on one map.">
   <meta name="twitter:image" content="https://pinfoapp.com/assets/pinfo-bb.png">
   <meta name="apple-itunes-app" content="app-id=6463236759">
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="/assets/pinfo-bb.png" type="image/png">
+  <link rel="apple-touch-icon" href="/assets/pinfo-bb.png">
   <link rel="preload" href="/assets/v2/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Pinfo",
-    "operatingSystem": "iOS 17.0 or later",
-    "applicationCategory": "LifestyleApplication",
-    "description": "See what's on near you on one map - concerts, parties, art and meetups. RSVP, chat with the people going, and host your own events.",
-    "url": "https://pinfoapp.com/",
-    "downloadUrl": "https://apps.apple.com/app/id6463236759",
-    "installUrl": "https://apps.apple.com/app/id6463236759",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://pinfoapp.com/#org",
+        "name": "Pinfo",
+        "url": "https://pinfoapp.com/",
+        "logo": "https://pinfoapp.com/assets/v2/icon.png",
+        "email": "pinfoapp@gmail.com",
+        "sameAs": [
+          "https://apps.apple.com/app/id6463236759"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://pinfoapp.com/#website",
+        "url": "https://pinfoapp.com/",
+        "name": "Pinfo",
+        "alternateName": "Pinfo App",
+        "inLanguage": ["en", "de"],
+        "publisher": { "@id": "https://pinfoapp.com/#org" }
+      },
+      {
+        "@type": "MobileApplication",
+        "@id": "https://pinfoapp.com/#app",
+        "name": "Pinfo",
+        "image": "https://pinfoapp.com/assets/pinfo-bb.png",
+        "operatingSystem": "iOS 17.0 or later",
+        "applicationCategory": "LifestyleApplication",
+        "description": "See what's on near you on one map - concerts, parties, art and meetups. RSVP, chat with the people going, and host your own events.",
+        "url": "https://pinfoapp.com/",
+        "downloadUrl": "https://apps.apple.com/app/id6463236759",
+        "installUrl": "https://apps.apple.com/app/id6463236759",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "publisher": { "@id": "https://pinfoapp.com/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Pinfo?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Pinfo is a free iPhone app that shows concerts, parties, art and meetups near you on one map, in 99 cities including Berlin. RSVP in a tap, chat with the people going, and host your own events." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Pinfo free?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Browsing, saving, RSVPs, chat and hosting your first event are free. Hosting more than one event at a time needs a subscription (1.99 EUR a month)." }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need an account?",
+            "acceptedAnswer": { "@type": "Answer", "text": "No account is needed to browse the map. To RSVP, chat or host, sign in with your phone number - no password." }
+          },
+          {
+            "@type": "Question",
+            "name": "Which cities does Pinfo cover?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Pinfo lists events in 99 cities, with Berlin as its home city, most of them in Europe, and anyone can host an event anywhere." }
+          },
+          {
+            "@type": "Question",
+            "name": "Where do the events come from?",
+            "acceptedAnswer": { "@type": "Answer", "text": "From public event listings and from people hosting on Pinfo. Every event page links to its source." }
+          },
+          {
+            "@type": "Question",
+            "name": "How do private events work?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Only the people you invite can see a private event. Invite them from your contacts or send a personal link; you see who is going, who might come and who hasn't answered yet." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is there an Android app?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Not yet - Pinfo is on iPhone for now." }
+          },
+          {
+            "@type": "Question",
+            "name": "How is my data handled?",
+            "acceptedAnswer": { "@type": "Answer", "text": "We only use what the app needs to work. Read the privacy policy for the details." }
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>
 <body>
   <header class="nav">
-    <a href="/" class="brand"><img src="/assets/v2/icon.png" alt="" width="36" height="36"><span>Pinfo</span></a>
+    <a href="/" class="brand"><img src="/assets/v2/icon.png" alt="Pinfo app icon" width="36" height="36"><span>Pinfo</span></a>
     <nav>
       <a href="#features">Features</a>
       <a href="#faq">FAQ</a>
       <a class="btn small" href="https://apps.apple.com/app/id6463236759">Get the app</a>
+      <a href="/de/" lang="de" hreflang="de">DE</a>
     </nav>
   </header>
 
@@ -51,7 +130,7 @@
     <section class="hero black">
       <div class="wrap split">
         <div class="copy">
-          <h1>New in town?<br>See what's on tonight.</h1>
+          <h1>Pinfo: new in town?<br>See what's on tonight.</h1>
           <p class="lead">Concerts, parties, art and meetups near you, all on one map. RSVP in a tap and meet the people going.</p>
           <div class="cta">
             <a href="https://apps.apple.com/app/id6463236759" class="badge"><img src="/assets/app_store_badge.svg" alt="Download on the App Store" width="200" height="67"></a>
@@ -136,9 +215,10 @@
     <section id="faq" class="faq">
       <div class="wrap narrow">
         <h2 class="center">Questions</h2>
+        <details><summary>What is Pinfo?</summary><p>Pinfo is a free iPhone app that shows concerts, parties, art and meetups near you on one map, in 99 cities including Berlin. RSVP in a tap, chat with the people going, and host your own events.</p></details>
         <details><summary>Is Pinfo free?</summary><p>Yes. Browsing, saving, RSVPs, chat and hosting your first event are free. Hosting more than one event at a time needs a subscription (1.99 EUR a month).</p></details>
         <details><summary>Do I need an account?</summary><p>No account is needed to browse the map. To RSVP, chat or host, sign in with your phone number - no password.</p></details>
-        <details><summary>Which cities does Pinfo cover?</summary><p>Pinfo lists events in 99 cities, most of them in Europe, and anyone can host an event anywhere.</p></details>
+        <details><summary>Which cities does Pinfo cover?</summary><p>Pinfo lists events in 99 cities, with Berlin as its home city, most of them in Europe, and anyone can host an event anywhere.</p></details>
         <details><summary>Where do the events come from?</summary><p>From public event listings and from people hosting on Pinfo. Every event page links to its source.</p></details>
         <details><summary>How do private events work?</summary><p>Only the people you invite can see a private event. Invite them from your contacts or send a personal link; you see who is going, who might come and who hasn't answered yet.</p></details>
         <details><summary>Is there an Android app?</summary><p>Not yet - Pinfo is on iPhone for now.</p></details>
@@ -148,21 +228,27 @@
 
     <section class="final purple">
       <div class="wrap center">
-        <img src="/assets/v2/icon.png" alt="" width="96" height="96" class="final-icon">
+        <img src="/assets/v2/icon.png" alt="Pinfo app icon" width="96" height="96" class="final-icon" loading="lazy">
         <h2>See what's on tonight.</h2>
-        <a href="https://apps.apple.com/app/id6463236759" class="badge"><img src="/assets/app_store_badge.svg" alt="Download on the App Store" width="200" height="67"></a>
+        <a href="https://apps.apple.com/app/id6463236759" class="badge"><img src="/assets/app_store_badge.svg" alt="Download on the App Store" width="200" height="67" loading="lazy"></a>
       </div>
     </section>
   </main>
 
   <footer class="foot">
     <div class="wrap foot-row">
-      <a href="/" class="brand"><img src="/assets/v2/icon.png" alt="" width="28" height="28"><span>Pinfo</span></a>
+      <a href="/" class="brand"><img src="/assets/v2/icon.png" alt="Pinfo app icon" width="28" height="28" loading="lazy"><span>Pinfo</span></a>
       <nav>
         <a href="/tos">Terms</a>
         <a href="/privacy">Privacy</a>
         <a href="/site-notice">Site notice</a>
         <a href="mailto:pinfoapp@gmail.com">Contact</a>
+        <!--
+        Social profiles (add once the owner confirms the handles):
+        <a href="" aria-label="Pinfo on Instagram">Instagram</a>
+        <a href="" aria-label="Pinfo on TikTok">TikTok</a>
+        <a href="" aria-label="Pinfo on LinkedIn">LinkedIn</a>
+        -->
       </nav>
     </div>
   </footer>
