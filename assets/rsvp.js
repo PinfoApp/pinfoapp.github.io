@@ -99,7 +99,7 @@
       changeAnswer: "Change my answer",
       openInMaps: "Open in Maps",
       guestCount: function (going, maybe) { return going + " going, " + maybe + " maybe"; },
-      installHeadingGoing: "You're going! Get Pinfo for this event",
+      installHeadingGoing: "Get Pinfo for this event",
       installLinesGoing: [
         "Chat with the other guests before it starts",
         "Get {host}'s updates if the time or place changes",
@@ -169,7 +169,7 @@
       changeAnswer: "Antwort ändern",
       openInMaps: "In Karten öffnen",
       guestCount: function (going, maybe) { return going + " dabei, " + maybe + " vielleicht"; },
-      installHeadingGoing: "Du bist dabei! Hol dir Pinfo für dieses Event",
+      installHeadingGoing: "Hol dir Pinfo für dieses Event",
       installLinesGoing: [
         "Chatte schon vorher mit den anderen Gästen",
         "Bekomme Updates von {host}, wenn sich Zeit oder Ort ändern",
