@@ -67,6 +67,7 @@
     .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--indigo); }
     h1 { font-size: 23px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.2px; }
     .meta { color: var(--muted); font-size: 15px; margin: 0 0 22px; }
+    .ended-note { color: var(--muted); font-size: 13px; font-weight: 600; margin: -14px 0 22px; }
     .btn {
       display: block; width: 100%; text-align: center; text-decoration: none;
       padding: 15px 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
@@ -164,7 +165,7 @@
       <div id="actions" class="hidden">
         <a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
         <a id="open-invite" class="btn btn-store" href="#">I have Pinfo - open my invite</a>
-        <p class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
+        <p id="open-invite-hint" class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
       </div>
 
       <!-- Shown instead of #actions when the event id/code can't be
@@ -259,7 +260,7 @@
 
     function fetchEventById(id) {
       var url = SUPABASE_URL + "/rest/v1/events?id=eq." + id +
-                "&select=title,image_url,cover_url_app,cover_url_original,date_start&limit=1";
+                "&select=title,image_url,cover_url_app,cover_url_original,date_start,date_end&limit=1";
       return fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (rows) { return rows && rows[0]; })
@@ -303,6 +304,17 @@
       return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
     }
 
+    // Matches the app's rule: an event with no end time, or an end not
+    // after its start, is treated as ending 4 hours after it starts.
+    function isEventEnded(ev) {
+      if (!ev || !ev.date_start) return false;
+      var start = new Date(ev.date_start).getTime();
+      if (isNaN(start)) return false;
+      var end = ev.date_end ? new Date(ev.date_end).getTime() : NaN;
+      if (isNaN(end) || end <= start) end = start + 4 * 60 * 60 * 1000;
+      return Date.now() > end;
+    }
+
     // No id could be resolved to an event: unknown id/code, a cancelled or
     // private event, or an expired link. Never an error - a normal card
     // explaining that and pointing at the app, with the generic
@@ -334,6 +346,24 @@
       metaEl.classList.remove("skeleton");
       titleEl.textContent = ev.title || "View this event on Pinfo";
       metaEl.textContent = ev.date_start ? fmtDate(ev.date_start) : "";
+
+      var ended = isEventEnded(ev);
+      var endedEl = document.getElementById("ended-note");
+      if (ended) {
+        if (!endedEl) {
+          endedEl = document.createElement("p");
+          endedEl.id = "ended-note";
+          endedEl.className = "ended-note";
+          metaEl.insertAdjacentElement("afterend", endedEl);
+        }
+        endedEl.textContent = "This event has ended";
+      } else if (endedEl) {
+        endedEl.remove();
+      }
+      var openInvite = document.getElementById("open-invite");
+      if (openInvite) openInvite.classList.toggle("hidden", ended);
+      var openInviteHint = document.getElementById("open-invite-hint");
+      if (openInviteHint) openInviteHint.classList.toggle("hidden", ended);
 
       var cover = ev.cover_url_app || ev.image_url || ev.cover_url_original;
       var img = document.getElementById("cover");
