@@ -266,10 +266,15 @@
     });
   }
 
-  function previewInvite(token) {
+  // idToken, when given, re-checks the invite as this verified visitor
+  // rather than anonymously - needed for a returning group-link member,
+  // whose anonymous preview can say "full" (the one seat is taken, by
+  // them) even though they are the one on the list.
+  function previewInvite(token, idToken) {
     var url = SUPABASE_URL + "/rest/v1/rpc/get_invite_preview?_token=" + encodeURIComponent(token);
+    var auth = idToken ? ("Bearer " + idToken) : ("Bearer " + SUPABASE_KEY);
     return withTimeout(
-      fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
+      fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: auth } })
         .then(function (r) { return r.ok ? r.json() : null; }),
       10000
     );
@@ -443,18 +448,23 @@
 
     var isPersonal = preview.link_kind === "personal";
     var plusOnes = 0;
-    var nameInput = el("input", {
+    // A group-link visitor the server already has on the guest list (this
+    // is only ever true for the re-authenticated "Change my answer" case -
+    // see the change-answer-link handler below) already gave a name; skip
+    // asking for it again and send null, which the server keeps as-is.
+    var skipName = !!opts.skipName;
+    var nameInput = skipName ? null : el("input", {
       type: "text", class: "input", maxlength: "40",
       placeholder: S.namePlaceholder,
       value: isPersonal && preview.invitee_first_name ? preview.invitee_first_name : ""
     });
-    if (isPersonal && preview.invitee_first_name) nameInput.value = preview.invitee_first_name;
+    if (!skipName && isPersonal && preview.invitee_first_name) nameInput.value = preview.invitee_first_name;
 
     var errorEl = el("p", { class: "field-error hidden" });
 
     function submit(response) {
-      var name = nameInput.value.trim();
-      if (!name) {
+      var name = skipName ? null : nameInput.value.trim();
+      if (!skipName && !name) {
         errorEl.textContent = S.nameRequired;
         errorEl.classList.remove("hidden");
         nameInput.focus();
@@ -497,10 +507,12 @@
       children.push(el("p", { class: "hint-left", text: S.changeAnytime }));
     }
 
-    children.push(el("div", { class: "field" }, [
-      el("label", { class: "field-label", text: S.nameLabel }),
-      nameInput
-    ]));
+    if (!skipName) {
+      children.push(el("div", { class: "field" }, [
+        el("label", { class: "field-label", text: S.nameLabel }),
+        nameInput
+      ]));
+    }
     children.push(errorEl);
 
     var plusCtl = plusOnesControl(preview.plus_ones_allowed || 0, function (v) { plusOnes = v; });
@@ -719,10 +731,16 @@
           rsvpStatus(token, authCtx && authCtx.idToken).then(function (res) {
             if (res.timedOut) return renderNetworkError(function () { renderThankYou(token, data, authCtx); });
             if (res.data && (res.data.status === "ok" || res.data.status === "not_responded")) {
-              // Re-fetch preview-shaped context for the form (host name, link_kind, limits).
-              previewInvite(token).then(function (rows) {
+              // Re-fetch preview-shaped context for the form (host name,
+              // link_kind, limits) - authenticated as this visitor when
+              // possible, so a verified group-link member who holds the
+              // link's one seat gets back status "live" with their own
+              // current_response, not the anonymous "full" every other
+              // visitor to a used link correctly sees.
+              var idToken = authCtx && authCtx.idToken;
+              previewInvite(token, idToken).then(function (rows) {
                 var preview = rows && rows[0];
-                if (preview) renderAnswerForm(token, preview, authCtx, { alreadyResponse: data.response });
+                if (preview) renderAnswerForm(token, preview, authCtx, { alreadyResponse: data.response, skipName: !!idToken });
               });
             }
           });
