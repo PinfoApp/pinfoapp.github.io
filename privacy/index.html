@@ -6,6 +6,9 @@
 <title>Pinfo - Privacy Policy</title>
 <meta name="description" content="How Pinfo collects, uses, and protects your data - account, location, messages, and event information.">
 <link rel="canonical" href="https://pinfoapp.com/privacy">
+<link rel="alternate" hreflang="en" href="https://pinfoapp.com/privacy">
+<link rel="alternate" hreflang="de" href="https://pinfoapp.com/de/privacy">
+<link rel="alternate" hreflang="x-default" href="https://pinfoapp.com/privacy">
 <link rel="icon" href="/assets/pinfo-bb.png" type="image/png">
 <style>
   :root { color-scheme: light dark; }
@@ -19,11 +22,13 @@
   code { background: rgba(128,128,128,.15); padding: 1px 5px; border-radius: 4px; }
   a { color: #5b45d6; }
   footer { margin-top: 3rem; color: #888; font-size: .85rem; }
+  .lang-switch { text-align: right; font-size: .85rem; margin: 0 0 12px; }
 </style>
 </head>
 <body>
+<p class="lang-switch"><a href="/de/privacy">Deutsch</a></p>
 <h1>Privacy Policy</h1>
-<p class="updated">Last updated: 15 October 2026</p>
+<p class="updated">Last updated: 27 October 2026</p>
 
 <p>This Privacy Policy explains how <strong>Pinfo</strong> ("Pinfo", "we", "us") collects,
 uses, and shares information when you use the Pinfo mobile app and related services
@@ -65,6 +70,11 @@ of the European Union, and our primary data hosting is located in the EU.</p>
     guests", we access the contacts you select on your device (with your permission) and use
     the selected phone numbers to send invitations and to match invited people to their
     account if they sign up. We do not upload your entire address book.</li>
+  <li><strong>People invited by phone.</strong> If a host invites you by phone number and you
+    answer on our website (pinfoapp.com/i/...), we store your phone number, the name the host
+    or you typed, and your answer, and you confirm your number with a code sent by Google
+    Firebase. If you never create a Pinfo account, your number is deleted 90 days after the
+    event. By answering you confirm that you are 18 or older.</li>
   <li><strong>Voice and text for "Say it" (only if you use it).</strong> When you create an event
     with "Say it", the audio recording of your voice (if you speak) and the text you say or type
     are sent to our AI provider, OpenAI, to transcribe them and turn them into event details (see
@@ -78,6 +88,13 @@ of the European Union, and our primary data hosting is located in the EU.</p>
   <li><strong>Device and diagnostic data.</strong> Your device platform, operating system
     version, app version, a session identifier, and error/diagnostic logs, which help us find
     and fix problems.</li>
+  <li><strong>Crash reports.</strong> If the app crashes, Google Firebase Crashlytics receives
+    a crash report: your device model, operating system and app version, technical details of
+    the crash, the names of the last screens you used (never their content), and your Pinfo
+    user ID, so we can find and fix the problem.</li>
+  <li><strong>Days you use the app.</strong> We record the days on which you open the app (one
+    entry per day), to understand how many people come back to Pinfo. It is deleted with your
+    account.</li>
 </ul>
 <p>Pinfo does not currently sell event tickets or process payments for event admission. If that
 changes, we will update this Privacy Policy to describe any additional data collected before the
@@ -95,11 +112,12 @@ explain why before iOS shows its own permission prompt.</p>
 <ul>
   <li>We read only your contacts' <strong>names and phone numbers</strong>. These are shown on
     your phone so you can pick who to invite.</li>
-  <li>If <strong>"Show friends already on Pinfo"</strong> is switched on, each phone number is
-    converted on your phone into a one-way scrambled code (a SHA-256 hash), and those codes are
-    sent to Pinfo's server to find which contacts already have a Pinfo account. The codes are
-    compared once and are not stored. Only the matching accounts' display name and profile
-    photo are sent back.</li>
+  <li>If "Show friends already on Pinfo" is switched on, each phone number is converted on your
+    phone into a pseudonymised code (a SHA-256 hash), and those codes are sent to Pinfo's
+    server to find which contacts already have a Pinfo account. A hash of a phone number is
+    still personal data, because phone numbers are short enough to be guessed, so we use these
+    codes only for this one comparison and do not store them. Only the matching accounts'
+    display name and profile photo are sent back.</li>
   <li>Your address book is never uploaded or stored.</li>
   <li>You can turn the switch off in the invite screen, and you can turn off Contacts access in
     iOS Settings &gt; Pinfo at any time.</li>
@@ -126,16 +144,21 @@ the Service you request); <strong>your consent</strong> (for access to contacts,
 location, and push notifications, which you can withdraw at any time in your device settings,
 without affecting the lawfulness of processing before withdrawal);
 <strong>our legitimate interests</strong> (to keep the Service secure, prevent abuse, and
-improve the product); and <strong>legal obligations</strong> where applicable.</p>
+improve the product); and <strong>legal obligations</strong> where applicable. This includes
+crash reports and the record of the days you use the app (to keep the app working and to
+understand whether people come back) and the contact match (to show you which contacts are
+already on Pinfo).</p>
 
 <h2>7. Service providers and sharing</h2>
 <p>We do <strong>not sell</strong> your personal data. We share data with the following
 providers who process it on our behalf, and with other users as described below:</p>
 <ul>
-  <li><strong>Supabase</strong> - database and file storage hosting (EU region). Stores your
-    account data, events, messages, and uploaded chat media.</li>
-  <li><strong>Google Firebase</strong> - phone-number authentication and push notifications
-    (Firebase Cloud Messaging).</li>
+  <li><strong>Supabase</strong> (Supabase, Inc., United States) - database and file storage
+    hosting in its EU region. Stores your account data, events, messages, and uploaded chat
+    media.</li>
+  <li><strong>Google Firebase</strong> (Google Ireland Limited / Google LLC) - phone-number
+    authentication, push notifications (Firebase Cloud Messaging) and crash reports (Firebase
+    Crashlytics).</li>
   <li><strong>OpenAI</strong> (OpenAI, L.L.C., United States; for users in the European
     Economic Area and Switzerland, OpenAI Ireland Limited) - processes what you say or type
     with "Say it" to create event details, and transcribes voice recordings for Say it.</li>
@@ -151,6 +174,10 @@ providers who process it on our behalf, and with other users as described below:
     attendance and the guest list may be visible to other participants. Messages are visible
     to the people you send them to. Content you share may be seen, saved, or forwarded by
     others.</li>
+  <li><strong>Hosts.</strong> A host sees the names, profile photos and answers of the people
+    they invite, and, for people invited by phone, the name and phone number the host entered.
+    Pinfo is the controller for the data processed in the app; a host who organises a private
+    event does so privately, and Pinfo and hosts are not joint controllers.</li>
   <li><strong>Legal.</strong> We may disclose information if required by law or to protect the
     rights, safety, and security of our users, the public, or Pinfo.</li>
   <li><strong>Business transfers.</strong> If we are involved in a merger, acquisition, or
@@ -174,6 +201,10 @@ transmission or storage is completely secure.</p>
   <li>Messages are retained until you or the other participant delete them, or until your
     account is deleted. Messages you have sent to others may remain visible in their
     conversation even after you delete your account.</li>
+  <li>If you delete your account, it is first deactivated and can be restored by signing in
+    again within 30 days; after that it is deleted.</li>
+  <li>Crash reports are kept by Google for up to 90 days.</li>
+  <li>The record of the days you used the app is deleted with your account.</li>
 </ul>
 
 <h2>10. Your rights</h2>
@@ -189,11 +220,20 @@ authority, or with the <strong>Berlin Commissioner for Data Protection and Freed
 Information</strong> (Berliner Beauftragte für Datenschutz und Informationsfreiheit), the
 supervisory authority for our place of establishment.</p>
 
+<div class="note">
+<strong>Your right to object.</strong> Where we rely on our legitimate interests (keeping the
+Service secure, preventing abuse, crash reports, understanding whether people come back, the
+contact match), you can object at any time, on grounds relating to your particular situation, by
+writing to <a href="mailto:pinfoapp@gmail.com">pinfoapp@gmail.com</a>. We then stop, unless we
+have compelling legitimate grounds that override your interests, or the processing is needed for
+legal claims.
+</div>
+
 <h2>11. International transfers</h2>
-<p>Our primary data hosting is in the EU. Some providers (such as Google/Firebase, Apple, and
-OpenAI) may process data in other countries; where they do, they are required to use
-appropriate safeguards for international transfers, such as the European Commission's Standard
-Contractual Clauses.</p>
+<p>Our primary data hosting is in the EU. Some providers (Supabase, Google/Firebase, Apple and
+OpenAI) are based in the United States or may process data there. Where they do, the transfer is
+based on the EU-US Data Privacy Framework (where the provider is certified) or on the European
+Commission's Standard Contractual Clauses.</p>
 
 <h2>12. Children</h2>
 <p>Pinfo is not directed to children. You must be at least <strong>18</strong>
@@ -207,10 +247,9 @@ date above and, where appropriate, notify you in the app.</p>
 <h2>14. Contact</h2>
 <p>Questions about this policy or your data:
 <a href="mailto:pinfoapp@gmail.com">pinfoapp@gmail.com</a>, or by post to Friedrich Bremer,
-Spenerstraße, 10577 Berlin, Germany.</p>
+Spenerstraße, 10577 Berlin, Germany. Site notice (Impressum):
+<a href="/site-notice">pinfoapp.com/site-notice</a>. This Privacy Policy is available in English
+and German; both versions are equally binding.</p>
 
-<footer>
-This document is a good-faith description of how Pinfo handles data and is not legal advice.
-</footer>
 </body>
 </html>

@@ -82,6 +82,7 @@
       btnMaybe: "Maybe",
       btnCant: "Can't go",
       privacyPersonal: function (host) { return "Your answer is shared with " + host + "."; },
+      ageConfirm: "By answering you confirm that you are 18 or older.",
       privacyGroupPrefix: "We use your number only to confirm it's you and to carry your answer into Pinfo if you join with it. We delete it 90 days after the event. Details in our ",
       privacyPolicyLinkText: "privacy policy",
       phoneLabel: "Phone number",
@@ -152,6 +153,7 @@
       btnMaybe: "Vielleicht",
       btnCant: "Kann nicht",
       privacyPersonal: function (host) { return "Deine Antwort wird mit " + host + " geteilt."; },
+      ageConfirm: "Mit deiner Antwort bestätigst du, dass du mindestens 18 Jahre alt bist.",
       privacyGroupPrefix: "Wir verwenden deine Nummer nur, um zu bestätigen, dass du es bist, und um deine Antwort zu Pinfo zu übertragen, falls du dich damit anmeldest. Wir löschen sie 90 Tage nach der Veranstaltung. Details in unserer ",
       privacyPolicyLinkText: "Datenschutzerklärung",
       phoneLabel: "Telefonnummer",
@@ -526,6 +528,8 @@
     } else {
       children.push(buttonsRow);
     }
+
+    children.push(el("p", { class: "privacy-line", text: S.ageConfirm }));
 
     if (!isPersonal) {
       children.push(privacyGroupLine());
