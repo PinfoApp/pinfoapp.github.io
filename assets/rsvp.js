@@ -317,6 +317,13 @@
       var appMod = mods[0], authMod = mods[1];
       var app = appMod.initializeApp(FIREBASE_CONFIG);
       var auth = authMod.getAuth(app);
+      // Send the verification SMS and reCAPTCHA in the visitor's own
+      // language instead of always English. Must be set before the
+      // RecaptchaVerifier is created and before signInWithPhoneNumber is
+      // called; both happen later in sendPhoneCode(), after this resolves.
+      // Firebase falls back to English for languages it has no template
+      // for.
+      authMod.useDeviceLanguage(auth);
       firebaseState.app = app;
       firebaseState.auth = auth;
       firebaseState.authMod = authMod;
