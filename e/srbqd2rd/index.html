@@ -121,9 +121,10 @@
     .chip-active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
     .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
     .btn-answer { flex: 1 1 0; min-width: 90px; margin-top: 0; }
-    .btn-going { background: var(--indigo); color: #fff; }
+    .btn-going { background: #f2f0fb; color: var(--ink); }
     .btn-maybe { background: #f2f0fb; color: var(--ink); }
     .btn-cant { background: #f2f0fb; color: var(--muted); }
+    .btn-answer.selected { background: var(--indigo); color: #fff; }
     .already-said { font-weight: 600; font-size: 14px; margin: 0; }
     .hint-left { color: var(--muted); font-size: 13px; margin: -6px 0 0; }
     .privacy-line { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 6px; }
@@ -201,15 +202,40 @@
       </p>
 
       <!-- Shown instead of #actions when the event id/code can't be
-           resolved (unknown, cancelled, or private to this visitor). Never
-           an error page - still a normal 200 with the generic link-preview
-           tags in <head>, so a private event's details are never leaked to
-           a crawler. -->
+           resolved (unknown, cancelled, or private to this visitor). The
+           page itself never shows a browser-level error, and the generic
+           link-preview tags in <head> are left untouched so a private
+           event's details are never leaked to a crawler - but note that
+           GitHub Pages serves this entire page (for every /e/<code> and
+           /i/<token> other than the one pre-rendered example at
+           /e/srbqd2rd) through its 404.html fallback, which always answers
+           with a real HTTP 404 status, even for a code/token that resolves
+           fine. Some link-preview bots and crawlers may drop or skip
+           indexing a page served with a 404 status, regardless of its
+           content. GitHub Pages has no way to serve a dynamic path with a
+           200 status (no rewrites, no server-side logic); fixing this
+           would need a reverse proxy in front of GitHub Pages (e.g. a
+           Cloudflare Worker that rewrites the status to 200) or moving
+           hosting to a platform with rewrite support (Cloudflare Pages,
+           Netlify, Vercel). -->
       <div id="not-found-actions" class="hidden">
         <a id="not-found-btn" class="btn btn-primary hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo, it's free</a>
         <img id="not-found-qr" class="qr-code hidden" src="/assets/appstore-qr.svg" alt="Scan with your iPhone camera" width="180" height="180" />
         <p id="not-found-qr-caption" class="qr-caption hidden">Scan with your iPhone camera</p>
       </div>
+    </div>
+  </main>
+
+  <!-- Any path that isn't shaped like an event link at all (a typo, an old
+       bookmark, a genuinely missing page) lands here instead of the
+       event-specific "not available" card above, which only makes sense
+       for /event/, /e/ and /i/ links that failed to resolve. -->
+  <main class="card hidden" id="plain-404" role="main">
+    <div class="body">
+      <span class="brand"><span class="dot"></span> Pinfo</span>
+      <h1>Page not found</h1>
+      <p class="meta">The page you're looking for doesn't exist or may have moved.</p>
+      <a class="btn btn-primary" href="/">Go to Pinfo</a>
     </div>
   </main>
 
@@ -397,6 +423,21 @@
       }
     }
 
+    // A path with no event-link shape at all: a typo, an old bookmark, or a
+    // genuinely missing page. A plain not-found page, not the event card.
+    function renderPlainNotFound() {
+      document.getElementById("simple-card").classList.add("hidden");
+      document.getElementById("plain-404").classList.remove("hidden");
+    }
+
+    // True only for paths that look like they were meant to be an event
+    // link (start with /event/, /e/ or /i/, or carry ?id=) even if the
+    // specific id/code/token in them didn't resolve to anything.
+    function looksLikeEventPath(path) {
+      return path.indexOf("/event/") === 0 || path.indexOf("/e/") === 0 ||
+        path.indexOf("/i/") === 0 || !!new URLSearchParams(location.search).get("id");
+    }
+
     function render(ev) {
       if (!ev) { renderNotFound(); return; }
 
@@ -532,7 +573,16 @@
       };
       document.head.appendChild(script);
     } else {
-      finish(null, null);
+      var path = location.pathname.replace(/\/+$/, "") || "/";
+      if (path === "/impressum") {
+        location.replace("/de/site-notice");
+      } else if (path === "/terms") {
+        location.replace("/tos");
+      } else if (looksLikeEventPath(path)) {
+        finish(null, null);
+      } else {
+        renderPlainNotFound();
+      }
     }
   </script>
 </body>
