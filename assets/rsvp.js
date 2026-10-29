@@ -71,6 +71,7 @@
       personalGreeting: function (first, host) { return "Hi " + first + ", " + host + " invited you"; },
       groupGreeting: function (host) { return host + " invited you"; },
       groupSub: "Verify your phone number so the host knows who is coming.",
+      chooseAnswer: "Choose your answer.",
       fullHeading: function (host) { return "All spots from this link are taken. You can ask " + host + " to let you in."; },
       askToJoin: "Ask to join",
       alreadySaid: { going: "You said Going. Change?", maybe: "You said Maybe. Change?", cant: "You said Can't go. Change?" },
@@ -142,6 +143,7 @@
       personalGreeting: function (first, host) { return "Hallo " + first + ", " + host + " hat dich eingeladen"; },
       groupGreeting: function (host) { return host + " hat dich eingeladen"; },
       groupSub: "Bestätige deine Telefonnummer, damit der Gastgeber weiß, wer kommt.",
+      chooseAnswer: "Wähle deine Antwort.",
       fullHeading: function (host) { return "Alle Plätze über diesen Link sind vergeben. Du kannst " + host + " bitten, dich zuzulassen."; },
       askToJoin: "Beitritt anfragen",
       alreadySaid: { going: "Du hast Dabei gesagt. Ändern?", maybe: "Du hast Vielleicht gesagt. Ändern?", cant: "Du hast Kann nicht gesagt. Ändern?" },
@@ -218,14 +220,66 @@
     } catch (e) { return ""; }
   }
 
+  // Country-aware grouping for display only - not used for any API call,
+  // which always uses the raw E.164 string or the Firebase token itself.
+  // Keyed by calling code (without the "+"); covers every code selectable
+  // in the phone step below, plus "1" for US/Canada. The digit-block
+  // lengths match how people in that country write their own numbers; the
+  // last block absorbs whatever digits are left over, so a number a
+  // little longer or shorter than the example below still groups
+  // sensibly instead of being cut off.
+  var PHONE_CODE_LENGTH = { "49": 2, "43": 2, "41": 2, "31": 2, "33": 2, "34": 2, "39": 2, "44": 2, "48": 2, "1": 1, "351": 3, "45": 2, "46": 2, "47": 2, "358": 3 };
+  var PHONE_BLOCKS = {
+    "44": [4, 6],       // UK: 7700 900123
+    "33": [1, 2, 2, 2, 2], // France: 6 12 34 56 78
+    "39": [3, 3, 4],    // Italy: 312 345 6789
+    "31": [1, 8],       // Netherlands: 6 12345678
+    "34": [3, 2, 2, 2], // Spain: 612 34 56 78
+    "43": [3, 7],       // Austria: 664 1234567
+    "41": [2, 3, 2, 2], // Switzerland: 79 123 45 67
+    "48": [3, 3, 3],    // Poland: 512 345 678
+    "1": [3, 3, 4]      // US/Canada: 415 555 0132
+  };
+
+  function splitPhoneBlocks(digits, blocks) {
+    var parts = [];
+    var i = 0;
+    for (var b = 0; b < blocks.length; b++) {
+      var isLast = b === blocks.length - 1;
+      var take = isLast ? digits.length - i : blocks[b];
+      if (take <= 0) break;
+      parts.push(digits.slice(i, i + take));
+      i += take;
+    }
+    if (i < digits.length) parts.push(digits.slice(i));
+    return parts;
+  }
+
   function fmtPhoneDisplay(e164) {
-    // Light, locale-agnostic grouping for display only - not used for any
-    // API call, which always uses the raw E.164 string or the Firebase
-    // token itself.
-    if (!e164) return "";
-    return e164.replace(/(\+\d{1,3})(\d{3,4})(\d{3,4})(\d*)/, function (m, a, b, c, d) {
-      return [a, b, c, d].filter(Boolean).join(" ");
-    });
+    if (!e164 || e164.charAt(0) !== "+") return e164 || "";
+    var all = e164.slice(1);
+
+    // German mobile numbers (015x/016x/017x, written here without the
+    // leading 0): a 3-digit prefix block, then the rest as one block -
+    // e.g. +49 151 00000000. Any other German number falls back to the
+    // generic rule below, same as an unlisted country.
+    if (all.indexOf("49") === 0 && /^(15|16|17)/.test(all.slice(2))) {
+      var deRest = all.slice(2);
+      return "+49 " + deRest.slice(0, 3) + " " + deRest.slice(3);
+    }
+
+    var codes = Object.keys(PHONE_CODE_LENGTH).sort(function (a, b) { return b.length - a.length; });
+    for (var i = 0; i < codes.length; i++) {
+      var code = codes[i];
+      if (all.indexOf(code) !== 0) continue;
+      var rest = all.slice(code.length);
+      var blocks = PHONE_BLOCKS[code];
+      // The code itself, then the digits as one run if we have no
+      // country-specific grouping for it - never a guessed split.
+      return "+" + code + " " + (blocks ? splitPhoneBlocks(rest, blocks).join(" ") : rest);
+    }
+
+    return e164;
   }
 
   // ---- DOM helpers ---------------------------------------------------------
@@ -488,11 +542,15 @@
       });
     }
 
-    var buttonsRow = el("div", { class: "answer-row" }, [
-      el("button", { type: "button", class: "btn btn-answer btn-going", text: S.btnGoing, onclick: function () { submit("going"); } }),
-      el("button", { type: "button", class: "btn btn-answer btn-maybe", text: S.btnMaybe, onclick: function () { submit("maybe"); } }),
-      el("button", { type: "button", class: "btn btn-answer btn-cant", text: S.btnCant, onclick: function () { submit("cant"); } })
-    ]);
+    var goingBtn = el("button", { type: "button", class: "btn btn-answer btn-going", text: S.btnGoing, onclick: function () { submit("going"); } });
+    var maybeBtn = el("button", { type: "button", class: "btn btn-answer btn-maybe", text: S.btnMaybe, onclick: function () { submit("maybe"); } });
+    var cantBtn = el("button", { type: "button", class: "btn btn-answer btn-cant", text: S.btnCant, onclick: function () { submit("cant"); } });
+    var buttonsRow = el("div", { class: "answer-row" }, [goingBtn, maybeBtn, cantBtn]);
+
+    // Only the button matching the current answer looks selected - none of
+    // them before a first answer exists.
+    var selectedBtn = { going: goingBtn, maybe: maybeBtn, cant: cantBtn }[opts.alreadyResponse];
+    if (selectedBtn) selectedBtn.classList.add("selected");
 
     function setButtonsDisabled(disabled) {
       Array.prototype.forEach.call(buttonsRow.querySelectorAll("button"), function (b) { b.disabled = disabled; });
@@ -507,8 +565,13 @@
 
     var children = [el("h2", { class: "rsvp-heading", text: heading })];
 
-    if (!isPersonal && preview.status !== "full") {
-      children.push(el("p", { class: "meta", text: S.groupSub }));
+    // S.groupSub ("Verify your phone number...") belongs on the phone step
+    // only - by the time this form shows for a group link, verification is
+    // already done. On a first answer, point at the buttons instead; on
+    // the change-answer screen, the "You said X. Change?" line below
+    // already says enough.
+    if (!isPersonal && preview.status !== "full" && !opts.alreadyResponse) {
+      children.push(el("p", { class: "meta", text: S.chooseAnswer }));
     }
 
     if (opts.alreadyResponse) {
