@@ -22,16 +22,20 @@
   code { background: rgba(128,128,128,.15); padding: 1px 5px; border-radius: 4px; }
   a { color: #5b45d6; }
   footer { margin-top: 3rem; color: #888; font-size: .85rem; }
-  .lang-switch { text-align: right; font-size: .85rem; margin: 0 0 12px; }
+  .legal-nav { display: flex; justify-content: space-between; align-items: center; margin: 0 0 12px; font-size: .9rem; }
+  .legal-nav a { text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; min-height: 44px; padding: 4px 2px; }
 </style>
 </head>
 <body>
-<p class="lang-switch"><a href="/privacy">English</a></p>
+<header class="legal-nav">
+  <a href="/de/">Pinfo</a>
+  <a href="/privacy">English</a>
+</header>
 <h1>Datenschutzerklärung</h1>
 <p class="updated">Stand: 27. Oktober 2026</p>
 
-<p>Diese Datenschutzerklärung erklärt, wie Pinfo („Pinfo", „wir", „uns") Informationen erhebt,
-nutzt und weitergibt, wenn du die mobile App Pinfo und die zugehörigen Dienste (der „Dienst")
+<p>Diese Datenschutzerklärung erklärt, wie Pinfo („Pinfo“, „wir“, „uns“) Informationen erhebt,
+nutzt und weitergibt, wenn du die mobile App Pinfo und die zugehörigen Dienste (der „Dienst“)
 nutzt. Pinfo ist eine App für Veranstaltungen und soziale Kontakte: Du entdeckst Veranstaltungen
 in deiner Nähe auf einer Karte, speicherst sie und zeigst Interesse, antwortest auf Einladungen
 zu privaten Veranstaltungen, erstellst eigene Veranstaltungen, chattest mit anderen Nutzern und
@@ -63,24 +67,24 @@ der Europäischen Union, betrieben, und unsere Daten liegen in erster Linie in d
   <li><strong>Inhalte, die du erstellst.</strong> Veranstaltungen, die du erstellst (Titel,
     Beschreibung, Datum und Uhrzeit, Ort und Koordinaten, Titelbild und bei privaten
     Veranstaltungen eine Telefonnummer des Gastgebers), deine Antworten auf Einladungen und
-    dein „Interesse", gespeicherte Veranstaltungen, Bewertungen von Veranstaltungen sowie
+    dein „Interesse“, gespeicherte Veranstaltungen, Bewertungen von Veranstaltungen sowie
     Feedback oder Meldungen, die du abgibst.</li>
   <li><strong>Nachrichten.</strong> Einzelchats und Gruppenchats privater Veranstaltungen
-    („Event Space"), einschließlich Text, Bildern und Sprachnachrichten. Sie werden auf unseren
+    („Event Space“), einschließlich Text, Bildern und Sprachnachrichten. Sie werden auf unseren
     Servern gespeichert und sind nicht Ende-zu-Ende-verschlüsselt.</li>
-  <li><strong>Kontakte (nur wenn du Personen einlädst).</strong> Wenn du „Gäste einladen"
+  <li><strong>Kontakte (nur wenn du Personen einlädst).</strong> Wenn du „Gäste einladen“
     nutzt, greifen wir (mit deiner Erlaubnis) auf die Kontakte zu, die du auf deinem Gerät
     auswählst, und nutzen die ausgewählten Telefonnummern, um Einladungen zu senden und
     eingeladene Personen ihrem Konto zuzuordnen, wenn sie sich anmelden. Wir laden nicht dein
     ganzes Adressbuch hoch.</li>
   <li><strong>Per Telefonnummer eingeladene Personen.</strong> Wenn dich ein Gastgeber per
     Telefonnummer einlädt und du auf unserer Website antwortest (pinfoapp.com/i/...), speichern
-    wir deine Telefonnummer, den Namen, den der Gastgeber oder du eingegeben hat, und deine
+    wir deine Telefonnummer, den Namen, den der Gastgeber oder du eingegeben hast, und deine
     Antwort; du bestätigst deine Nummer mit einem Code, den Google Firebase sendet. Wenn du nie
     ein Pinfo-Konto erstellst, wird deine Nummer 90 Tage nach der Veranstaltung gelöscht. Mit
     deiner Antwort bestätigst du, dass du mindestens 18 Jahre alt bist.</li>
-  <li><strong>Stimme und Text für „Say it" (nur wenn du es nutzt).</strong> Wenn du eine
-    Veranstaltung mit „Say it" erstellst, werden die Aufnahme deiner Stimme (wenn du sprichst)
+  <li><strong>Stimme und Text für „Say it“ (nur wenn du es nutzt).</strong> Wenn du eine
+    Veranstaltung mit „Say it“ erstellst, werden die Aufnahme deiner Stimme (wenn du sprichst)
     und der Text, den du sagst oder tippst, an unseren KI-Anbieter OpenAI gesendet, um sie zu
     transkribieren und in Angaben zur Veranstaltung umzuwandeln (siehe Abschnitt 3). Pinfo
     speichert deine Sprachaufnahmen nicht; die daraus entstehenden Angaben werden als Teil
@@ -105,8 +109,8 @@ der Europäischen Union, betrieben, und unsere Daten liegen in erster Linie in d
 Veranstaltungen ab. Sollte sich das ändern, beschreiben wir zusätzlich erhobene Daten in dieser
 Datenschutzerklärung, bevor die Funktion startet.</p>
 
-<h2 id="ai">3. KI-Funktionen („Say it")</h2>
-<p>Wenn du eine Veranstaltung mit „Say it" erstellst, werden die Worte, die du sagst oder
+<h2 id="ai">3. KI-Funktionen („Say it“)</h2>
+<p>Wenn du eine Veranstaltung mit „Say it“ erstellst, werden die Worte, die du sagst oder
 tippst, an unseren KI-Anbieter OpenAI gesendet, um daraus Angaben zur Veranstaltung zu machen.
 Wenn du deine Stimme nutzt, wird die Aufnahme zur Transkription an OpenAI gesendet. Pinfo
 speichert deine Sprachaufnahmen nicht. OpenAI verarbeitet diese Daten in unserem Auftrag und
@@ -118,7 +122,8 @@ Veranstaltung einlädst, und erklärt den Grund, bevor iOS seine eigene Abfrage 
 <ul>
   <li>Wir lesen nur die Namen und Telefonnummern deiner Kontakte. Sie werden auf deinem
     Telefon angezeigt, damit du auswählen kannst, wen du einlädst.</li>
-  <li>Wenn „Show friends already on Pinfo" eingeschaltet ist, wird jede Telefonnummer auf
+  <li>Wenn die Option „Freunde zeigen, die schon bei Pinfo sind“ (in der App: „Show friends
+    already on Pinfo“) eingeschaltet ist, wird jede Telefonnummer auf
     deinem Telefon in einen pseudonymisierten Code (einen SHA-256-Hash) umgewandelt, und diese
     Codes werden an den Server von Pinfo gesendet, um festzustellen, welche Kontakte bereits
     ein Pinfo-Konto haben. Auch ein Hash einer Telefonnummer ist ein personenbezogenes Datum,
@@ -177,9 +182,9 @@ beschrieben:</p>
     Telefonnummer, Push-Benachrichtigungen (Firebase Cloud Messaging) und Absturzberichte
     (Firebase Crashlytics).</li>
   <li><strong>OpenAI</strong> (OpenAI, L.L.C., USA; für Nutzer im Europäischen Wirtschaftsraum
-    und in der Schweiz OpenAI Ireland Limited) - verarbeitet, was du bei „Say it" sagst oder
+    und in der Schweiz OpenAI Ireland Limited) - verarbeitet, was du bei „Say it“ sagst oder
     tippst, um Angaben zur Veranstaltung zu erstellen, und transkribiert Sprachaufnahmen für
-    „Say it".</li>
+    „Say it“.</li>
   <li><strong>Apple</strong> - App Store und In-App-Käufe (Abrechnung von Abonnements) sowie
     Apple Maps für die Kartenanzeige.</li>
   <li><strong>Google Kalender</strong> - nur wenn du ihn verbindest, damit wir Veranstaltungen,
@@ -234,8 +239,8 @@ Speichermethode ist vollkommen sicher.</p>
 
 <h2>10. Deine Rechte</h2>
 <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und
-Datenübertragbarkeit sowie das Recht, Einwilligungen zu widerrufen. Du kannst dein Konto in der
-App löschen („Profile" &rarr; „Delete account"); dadurch werden dein Profil und die zugehörigen
+Datenübertragbarkeit sowie das Recht, Einwilligungen zu widerrufen. Du kannst dein Konto löschen
+(in der App unter „Profile“ &rarr; „Delete account“); dadurch werden dein Profil und die zugehörigen
 Daten aus unseren Systemen entfernt; manche Informationen können für begrenzte Zeit in
 Sicherungen oder Protokollen bleiben, und Inhalte, die du bereits mit anderen geteilt hast,
 können für sie sichtbar bleiben. Um ein Recht auszuüben, schreibe an
@@ -268,7 +273,7 @@ Veranstaltungsorte.</p>
 
 <h2>13. Änderungen dieser Datenschutzerklärung</h2>
 <p>Wir können diese Datenschutzerklärung von Zeit zu Zeit ändern. Dann aktualisieren wir das
-Datum „Stand" oben und informieren dich, wo angemessen, in der App.</p>
+Datum „Stand“ oben und informieren dich, wo angemessen, in der App.</p>
 
 <h2>14. Kontakt</h2>
 <p>Fragen zu dieser Erklärung oder zu deinen Daten:
@@ -279,5 +284,9 @@ Spenerstraße, 10577 Berlin, Deutschland. Impressum:
 <p>Diese Datenschutzerklärung gibt es auf Deutsch und auf Englisch; beide Fassungen sind
 gleichermaßen verbindlich.</p>
 
+<footer>
+Nutzungsbedingungen: <a href="/de/tos">pinfoapp.com/de/tos</a> &middot;
+Impressum: <a href="/de/site-notice">pinfoapp.com/de/site-notice</a>
+</footer>
 </body>
 </html>

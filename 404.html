@@ -182,6 +182,19 @@
     </div>
   </main>
 
+  <!-- Any path that isn't shaped like an event link at all (a typo, an old
+       bookmark, a genuinely missing page) lands here instead of the
+       event-specific "not available" card above, which only makes sense
+       for /event/, /e/ and /i/ links that failed to resolve. -->
+  <main class="card hidden" id="plain-404" role="main">
+    <div class="body">
+      <span class="brand"><span class="dot"></span> Pinfo</span>
+      <h1>Page not found</h1>
+      <p class="meta">The page you're looking for doesn't exist or may have moved.</p>
+      <a class="btn btn-primary" href="/">Go to Pinfo</a>
+    </div>
+  </main>
+
   <!-- /i/<token>: the web RSVP flow. Hidden and empty until
        assets/rsvp.js (loaded only for this route) initializes it - see
        assets/rsvp.js for the full state machine. The event never gets
@@ -338,6 +351,21 @@
       }
     }
 
+    // A path with no event-link shape at all: a typo, an old bookmark, or a
+    // genuinely missing page. A plain not-found page, not the event card.
+    function renderPlainNotFound() {
+      document.getElementById("simple-card").classList.add("hidden");
+      document.getElementById("plain-404").classList.remove("hidden");
+    }
+
+    // True only for paths that look like they were meant to be an event
+    // link (start with /event/, /e/ or /i/, or carry ?id=) even if the
+    // specific id/code/token in them didn't resolve to anything.
+    function looksLikeEventPath(path) {
+      return path.indexOf("/event/") === 0 || path.indexOf("/e/") === 0 ||
+        path.indexOf("/i/") === 0 || !!new URLSearchParams(location.search).get("id");
+    }
+
     function render(ev) {
       if (!ev) { renderNotFound(); return; }
 
@@ -428,7 +456,16 @@
       };
       document.head.appendChild(script);
     } else {
-      finish(null, null);
+      var path = location.pathname.replace(/\/+$/, "") || "/";
+      if (path === "/impressum") {
+        location.replace("/de/site-notice");
+      } else if (path === "/terms") {
+        location.replace("/tos");
+      } else if (looksLikeEventPath(path)) {
+        finish(null, null);
+      } else {
+        renderPlainNotFound();
+      }
     }
   </script>
 </body>
