@@ -70,9 +70,20 @@
       font-weight: 700; color: var(--indigo); font-size: 15px; margin-bottom: 12px;
     }
     .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--indigo); }
-    h1 { font-size: 23px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.2px; }
-    .meta { color: var(--muted); font-size: 15px; margin: 0 0 22px; }
-    .ended-note { color: var(--muted); font-size: 13px; font-weight: 600; margin: -14px 0 22px; }
+    .platform-note {
+      background: var(--install-tint); color: var(--indigo); font-size: 13px; font-weight: 600;
+      padding: 10px 14px; border-radius: 12px; margin: 0 0 16px;
+    }
+    h1 { font-size: 23px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.2px; overflow-wrap: break-word; }
+    .meta { color: var(--muted); font-size: 15px; margin: 0 0 10px; }
+    .ended-note { color: var(--muted); font-size: 13px; font-weight: 600; margin: -4px 0 10px; }
+    .details { display: flex; flex-direction: column; gap: 10px; margin: 0 0 22px; }
+    .meta-sub { color: var(--muted); font-size: 14px; margin: 0; }
+    .description { color: var(--ink); font-size: 15px; line-height: 1.6; white-space: pre-line;
+      overflow-wrap: break-word; margin: 0; }
+    .qr-line { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+    .qr-line img { width: 44px; height: 44px; border-radius: 6px; flex: none; }
+    .qr-line span { font-size: 13px; color: var(--muted); }
     .btn {
       display: block; width: 100%; text-align: center; text-decoration: none;
       padding: 15px 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
@@ -161,17 +172,33 @@
     <img id="cover" class="cover" alt="" />
     <div class="body">
       <span class="brand"><span class="dot"></span> Pinfo</span>
+      <p id="platform-note" class="platform-note hidden">Pinfo is on iPhone for now. You can answer and see everything about this event here.</p>
       <h1 id="title" class="skeleton">Loading event...</h1>
       <p id="meta" class="meta skeleton">&nbsp;</p>
 
-      <!-- Only shown for magic invite links (?t=<token> present). The token
-           is never sent anywhere or validated here - claiming an invite
-           happens only inside the app, via an authenticated call. -->
+      <div id="details" class="details hidden">
+        <p id="host-line" class="meta-sub hidden"></p>
+        <div id="venue-card" class="address-card hidden">
+          <p class="address-title" id="venue-title"></p>
+          <p class="address-line" id="venue-address"></p>
+        </div>
+        <p id="description-text" class="description hidden"></p>
+      </div>
+
+      <!-- Only shown for magic invite links (?t=<token> present) on iPhone.
+           The token is never sent anywhere or validated here - claiming an
+           invite happens only inside the app, via an authenticated call. -->
       <div id="actions" class="hidden">
         <a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
         <a id="open-invite" class="btn btn-store" href="#">I have Pinfo - open my invite</a>
         <p id="open-invite-hint" class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
       </div>
+
+      <!-- Desktop only: a quiet nudge instead of the full app-install card. -->
+      <p id="qr-line" class="qr-line hidden">
+        <img id="qr-line-img" src="/assets/appstore-qr.svg" alt="Scan with your iPhone camera" width="88" height="88" />
+        <span>Got an iPhone? Get Pinfo</span>
+      </p>
 
       <!-- Shown instead of #actions when the event id/code can't be
            resolved (unknown, cancelled, or private to this visitor). Never
@@ -196,6 +223,7 @@
     <img id="rsvp-cover" class="cover" alt="" />
     <div class="body">
       <span class="brand"><span class="dot"></span> Pinfo</span>
+      <p id="rsvp-platform-note" class="platform-note hidden"></p>
       <h1 id="rsvp-title" class="skeleton">Loading event...</h1>
       <p id="rsvp-meta" class="meta skeleton">&nbsp;</p>
       <div id="rsvp-content"></div>
@@ -265,7 +293,8 @@
 
     function fetchEventById(id) {
       var url = SUPABASE_URL + "/rest/v1/events?id=eq." + id +
-                "&select=title,image_url,cover_url_app,cover_url_original,date_start,date_end&limit=1";
+                "&select=title,description,host_name,image_url,cover_url_app,cover_url_original," +
+                "date_start,date_end,locations(title,address)&limit=1";
       return fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (rows) { return rows && rows[0]; })
@@ -309,6 +338,32 @@
       return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
     }
 
+    function isAndroid() {
+      return /Android/i.test(navigator.userAgent);
+    }
+
+    // Day, date and start/end time in the visitor's own time zone (the
+    // browser's local zone, which Intl.DateTimeFormat uses by default when
+    // no explicit timeZone is given).
+    function fmtDateRange(startIso, endIso) {
+      if (!startIso) return "";
+      try {
+        var start = new Date(startIso);
+        var dateOpts = { weekday: "short", day: "numeric", month: "short" };
+        var timeOpts = { hour: "2-digit", minute: "2-digit" };
+        var startDate = new Intl.DateTimeFormat(undefined, dateOpts).format(start);
+        var startTime = new Intl.DateTimeFormat(undefined, timeOpts).format(start);
+        if (!endIso) return startDate + ", " + startTime;
+        var end = new Date(endIso);
+        if (isNaN(end.getTime()) || end <= start) return startDate + ", " + startTime;
+        var endTime = new Intl.DateTimeFormat(undefined, timeOpts).format(end);
+        var sameDay = start.toDateString() === end.toDateString();
+        if (sameDay) return startDate + ", " + startTime + " to " + endTime;
+        var endDate = new Intl.DateTimeFormat(undefined, dateOpts).format(end);
+        return startDate + ", " + startTime + " to " + endDate + ", " + endTime;
+      } catch (e) { return fmtDate(startIso); }
+    }
+
     // Matches the app's rule: an event with no end time, or an end not
     // after its start, is treated as ending 4 hours after it starts.
     function isEventEnded(ev) {
@@ -336,7 +391,7 @@
       document.getElementById("not-found-actions").classList.remove("hidden");
       if (isIOS()) {
         document.getElementById("not-found-btn").classList.remove("hidden");
-      } else {
+      } else if (!isAndroid()) {
         document.getElementById("not-found-qr").classList.remove("hidden");
         document.getElementById("not-found-qr-caption").classList.remove("hidden");
       }
@@ -345,12 +400,18 @@
     function render(ev) {
       if (!ev) { renderNotFound(); return; }
 
+      var ios = isIOS();
+      var android = isAndroid();
+
+      var noteEl = document.getElementById("platform-note");
+      if (!ios) noteEl.classList.remove("hidden");
+
       var titleEl = document.getElementById("title");
       var metaEl = document.getElementById("meta");
       titleEl.classList.remove("skeleton");
       metaEl.classList.remove("skeleton");
       titleEl.textContent = ev.title || "View this event on Pinfo";
-      metaEl.textContent = ev.date_start ? fmtDate(ev.date_start) : "";
+      metaEl.textContent = ev.date_start ? fmtDateRange(ev.date_start, ev.date_end) : "";
 
       var ended = isEventEnded(ev);
       var endedEl = document.getElementById("ended-note");
@@ -365,10 +426,49 @@
       } else if (endedEl) {
         endedEl.remove();
       }
+
+      // Full event details, shown before any answer - safe on this page for
+      // every event that loads at all: row-level security already keeps a
+      // private event's row from coming back to an anonymous request, so an
+      // event reaching this point is always public.
+      var detailsEl = document.getElementById("details");
+      var hostEl = document.getElementById("host-line");
+      if (ev.host_name) {
+        hostEl.textContent = "Hosted by " + ev.host_name;
+        hostEl.classList.remove("hidden");
+      } else {
+        hostEl.classList.add("hidden");
+      }
+      var venueEl = document.getElementById("venue-card");
+      var loc = ev.locations;
+      if (loc && (loc.title || loc.address)) {
+        document.getElementById("venue-title").textContent = loc.title || "";
+        document.getElementById("venue-address").textContent = loc.address || "";
+        document.getElementById("venue-title").classList.toggle("hidden", !loc.title);
+        venueEl.classList.remove("hidden");
+      } else {
+        venueEl.classList.add("hidden");
+      }
+      var descEl = document.getElementById("description-text");
+      if (ev.description) {
+        descEl.textContent = ev.description;
+        descEl.classList.remove("hidden");
+      } else {
+        descEl.classList.add("hidden");
+      }
+      detailsEl.classList.toggle("hidden", !(ev.host_name || (loc && (loc.title || loc.address)) || ev.description));
+
+      // Buttons that only make sense with the app installed (iOS) stay as
+      // they were; Android gets nothing here (there is no app for it to
+      // open), desktop gets a small, quiet QR nudge instead.
       var openInvite = document.getElementById("open-invite");
       if (openInvite) openInvite.classList.toggle("hidden", ended);
       var openInviteHint = document.getElementById("open-invite-hint");
       if (openInviteHint) openInviteHint.classList.toggle("hidden", ended);
+      if (!ios) document.getElementById("actions").classList.add("hidden");
+      var qrLine = document.getElementById("qr-line");
+      if (!ios && !android && !ended) qrLine.classList.remove("hidden");
+      else qrLine.classList.add("hidden");
 
       var cover = ev.cover_url_app || ev.image_url || ev.cover_url_original;
       var img = document.getElementById("cover");
