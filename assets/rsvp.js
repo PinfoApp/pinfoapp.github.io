@@ -125,7 +125,13 @@
       installSubCant: "Free on iPhone. Takes a minute to set up.",
       openMyInvite: "I have Pinfo, open my invitation",
       qrCaption: "Scan with your iPhone camera",
-      androidNote: "Pinfo is on iPhone for now. Your answer is saved either way."
+      androidNote: "Pinfo is on iPhone for now. Your answer is saved either way.",
+      platformNote: "Pinfo is on iPhone for now. You can answer and see everything about this event here.",
+      addToGoogleCalendar: "Add to Google Calendar",
+      downloadIcs: "Download for any calendar",
+      keepLinkText: "Keep this link. It always shows the latest time and place, and you can change your answer here.",
+      copyLink: "Copy link",
+      linkCopied: "Link copied"
     },
     de: {
       invalid: "Dieser Einladungslink ist nicht mehr gültig.",
@@ -197,7 +203,13 @@
       installSubCant: "Kostenlos für iPhone. In einer Minute eingerichtet.",
       openMyInvite: "Ich habe Pinfo, meine Einladung öffnen",
       qrCaption: "Mit der iPhone-Kamera scannen",
-      androidNote: "Pinfo gibt es vorerst nur für das iPhone. Deine Antwort ist trotzdem gespeichert."
+      androidNote: "Pinfo gibt es vorerst nur für das iPhone. Deine Antwort ist trotzdem gespeichert.",
+      platformNote: "Pinfo gibt es vorerst nur für das iPhone. Du kannst hier antworten und alles zu diesem Event sehen.",
+      addToGoogleCalendar: "Zu Google Kalender hinzufügen",
+      downloadIcs: "Für jeden Kalender herunterladen",
+      keepLinkText: "Bewahre diesen Link auf. Er zeigt immer die neueste Zeit und den neuesten Ort, und du kannst hier deine Antwort ändern.",
+      copyLink: "Link kopieren",
+      linkCopied: "Link kopiert"
     }
   };
   var S = STRINGS[LOCALE];
@@ -209,6 +221,10 @@
     return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
   }
 
+  function isAndroid() {
+    return /Android/i.test(navigator.userAgent);
+  }
+
   // ---- Formatting --------------------------------------------------------
   function fmtDateTime(iso) {
     if (!iso) return "";
@@ -218,6 +234,28 @@
         hour: "2-digit", minute: "2-digit"
       }).format(new Date(iso));
     } catch (e) { return ""; }
+  }
+
+  // Shows the full start-to-end range when an end time is available,
+  // falling back to the start-only format otherwise.
+  function fmtDateRange(startIso, endIso) {
+    if (!startIso) return "";
+    try {
+      var locale = LOCALE === "de" ? "de-DE" : undefined;
+      var toWord = LOCALE === "de" ? " bis " : " to ";
+      var dateOpts = { weekday: "short", day: "numeric", month: "short" };
+      var timeOpts = { hour: "2-digit", minute: "2-digit" };
+      var start = new Date(startIso);
+      var startDate = new Intl.DateTimeFormat(locale, dateOpts).format(start);
+      var startTime = new Intl.DateTimeFormat(locale, timeOpts).format(start);
+      if (!endIso) return startDate + ", " + startTime;
+      var end = new Date(endIso);
+      if (isNaN(end.getTime()) || end <= start) return startDate + ", " + startTime;
+      var endTime = new Intl.DateTimeFormat(locale, timeOpts).format(end);
+      if (start.toDateString() === end.toDateString()) return startDate + ", " + startTime + toWord + endTime;
+      var endDate = new Intl.DateTimeFormat(locale, dateOpts).format(end);
+      return startDate + ", " + startTime + toWord + endDate + ", " + endTime;
+    } catch (e) { return fmtDateTime(startIso); }
   }
 
   // Country-aware grouping for display only - not used for any API call,
@@ -421,13 +459,14 @@
   }
 
   // ---- Rendering -------------------------------------------------------------
-  var root, headerCover, headerTitle, headerMeta, contentEl;
+  var root, headerCover, headerTitle, headerMeta, headerPlatformNote, contentEl;
 
   function initDom(rootNode) {
     root = rootNode;
     headerCover = root.querySelector("#rsvp-cover");
     headerTitle = root.querySelector("#rsvp-title");
     headerMeta = root.querySelector("#rsvp-meta");
+    headerPlatformNote = root.querySelector("#rsvp-platform-note");
     contentEl = root.querySelector("#rsvp-content");
   }
 
@@ -435,7 +474,7 @@
     headerTitle.classList.remove("skeleton");
     headerMeta.classList.remove("skeleton");
     headerTitle.textContent = preview && preview.title ? preview.title : "";
-    var when = preview && preview.date_start ? fmtDateTime(preview.date_start) : "";
+    var when = preview && preview.date_start ? fmtDateRange(preview.date_start, preview.date_end) : "";
     var where = preview && preview.area ? preview.area : "";
     headerMeta.textContent = [when, where].filter(Boolean).join(" - ");
     var cover = preview && (preview.cover_url || preview.image_url);
@@ -574,6 +613,10 @@
       children.push(el("p", { class: "meta", text: S.chooseAnswer }));
     }
 
+    if (preview.description) {
+      children.push(el("p", { class: "description", text: preview.description }));
+    }
+
     if (opts.alreadyResponse) {
       children.push(el("p", { class: "already-said", text: S.alreadySaid[opts.alreadyResponse] || "" }));
       children.push(el("p", { class: "hint-left", text: S.changeAnytime }));
@@ -695,7 +738,7 @@
     var status = data && data.status;
     switch (status) {
       case "ok":
-        renderThankYou(token, data, authCtx);
+        renderThankYou(token, data, authCtx, preview);
         break;
       case "pending_approval":
         renderPendingScreen(token, preview, authCtx);
@@ -764,7 +807,7 @@
 
   function handleStatusResult(token, preview, authCtx, data) {
     var status = data && data.status;
-    if (status === "ok") return renderThankYou(token, data, authCtx);
+    if (status === "ok") return renderThankYou(token, data, authCtx, preview);
     if (status === "pending_approval") return renderPendingScreen(token, preview, authCtx);
     if (status === "declined") return renderSimpleMessage(S.declinedText(preview.host_name || ""));
     if (status === "not_responded") return renderAnswerForm(token, preview, authCtx);
@@ -786,7 +829,114 @@
     return renderSimpleMessage(S.genericError);
   }
 
-  function renderThankYou(token, data, authCtx) {
+  // ---- Keep-this-link block (Google Calendar, .ics, copy link) -----------
+  // Shown only after Going or Maybe. On Android it comes first, ahead of
+  // the install pitch, since this is how an Android guest keeps the event
+  // without the app.
+  function fmtIcsDate(d) {
+    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  }
+
+  function icsEscape(s) {
+    return String(s || "")
+      .replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  }
+
+  function gcalHref(title, start, end, locationStr, description) {
+    var params = [
+      "action=TEMPLATE",
+      "text=" + encodeURIComponent(title || ""),
+      "dates=" + fmtIcsDate(start) + "/" + fmtIcsDate(end)
+    ];
+    if (locationStr) params.push("location=" + encodeURIComponent(locationStr));
+    if (description) params.push("details=" + encodeURIComponent(description));
+    return "https://calendar.google.com/calendar/render?" + params.join("&");
+  }
+
+  function buildIcsBlob(title, start, end, locationStr, description) {
+    var lines = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Pinfo//Event//EN", "BEGIN:VEVENT",
+      "UID:" + start.getTime() + "-" + Math.random().toString(36).slice(2) + "@pinfoapp.com",
+      "DTSTAMP:" + fmtIcsDate(new Date()),
+      "DTSTART:" + fmtIcsDate(start),
+      "DTEND:" + fmtIcsDate(end),
+      "SUMMARY:" + icsEscape(title)
+    ];
+    if (locationStr) lines.push("LOCATION:" + icsEscape(locationStr));
+    if (description) lines.push("DESCRIPTION:" + icsEscape(description));
+    lines.push("END:VEVENT", "END:VCALENDAR");
+    return new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+  }
+
+  function downloadIcs(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "event.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function copyLinkButton() {
+    var btn = el("button", { type: "button", class: "btn btn-store", text: S.copyLink });
+    btn.addEventListener("click", function () {
+      var link = location.href;
+      var done = function () {
+        btn.textContent = S.linkCopied;
+        setTimeout(function () { btn.textContent = S.copyLink; }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(done, done);
+      } else {
+        var ta = document.createElement("textarea");
+        ta.value = link;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) { /* ignore */ }
+        document.body.removeChild(ta);
+        done();
+      }
+    });
+    return btn;
+  }
+
+  function appendKeepLinkBlock(container, ctx) {
+    var ev = ctx.event || {};
+    var preview = ctx.preview;
+    var title = ev.title || (preview && preview.title) || "";
+    var startIso = ev.date_start || (preview && preview.date_start);
+    var endIso = ev.date_end || (preview && preview.date_end);
+    var loc = ev.location;
+    var locationStr = loc ? [loc.title, loc.address].filter(Boolean).join(", ")
+      : (ev.area || (preview && preview.area) || "");
+    var description = ev.description || (preview && preview.description) || "";
+
+    var children = [];
+    if (startIso) {
+      var start = new Date(startIso);
+      var end = endIso ? new Date(endIso) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+      children.push(el("a", {
+        class: "btn btn-store", target: "_blank", rel: "noopener",
+        href: gcalHref(title, start, end, locationStr, description),
+        text: S.addToGoogleCalendar
+      }));
+      var icsBtn = el("button", { type: "button", class: "btn btn-store", text: S.downloadIcs });
+      icsBtn.addEventListener("click", function () {
+        downloadIcs(buildIcsBlob(title, start, end, locationStr, description));
+      });
+      children.push(icsBtn);
+    }
+    children.push(el("p", { class: "hint", text: S.keepLinkText }));
+    children.push(copyLinkButton());
+
+    container.appendChild(card(children));
+  }
+
+  function renderThankYou(token, data, authCtx, preview) {
     clear(contentEl);
     var ev = data.event || {};
     var guests = data.guests || {};
@@ -803,7 +953,7 @@
         onclick: function (e) {
           e.preventDefault();
           rsvpStatus(token, authCtx && authCtx.idToken).then(function (res) {
-            if (res.timedOut) return renderNetworkError(function () { renderThankYou(token, data, authCtx); });
+            if (res.timedOut) return renderNetworkError(function () { renderThankYou(token, data, authCtx, preview); });
             if (res.data && (res.data.status === "ok" || res.data.status === "not_responded")) {
               // Re-fetch preview-shaped context for the form (host name,
               // link_kind, limits) - authenticated as this visitor when
@@ -821,6 +971,13 @@
         }
       })
     ]));
+
+    var keptAnswer = data.response === "going" || data.response === "maybe";
+    var android = isAndroid();
+
+    if (keptAnswer && android) {
+      appendKeepLinkBlock(contentEl, { event: ev, preview: preview });
+    }
 
     appendInstallBlock(contentEl, { response: data.response, event: ev, authCtx: authCtx, token: token, eventId: ev.id });
 
@@ -850,6 +1007,10 @@
     }
 
     if (detailChildren.length) contentEl.appendChild(card(detailChildren));
+
+    if (keptAnswer && !android) {
+      appendKeepLinkBlock(contentEl, { event: ev, preview: preview });
+    }
   }
 
   // ---- Install screen (section 7.10 / section 8) -------------------------
@@ -935,6 +1096,11 @@
     initDom(rootNode);
     setSmartBannerTarget(location.href);
 
+    if (headerPlatformNote) {
+      headerPlatformNote.textContent = S.platformNote;
+      headerPlatformNote.classList.toggle("hidden", isIOS());
+    }
+
     previewInvite(token).then(function (res) {
       if (res.timedOut) return renderNetworkError(function () { init(rootNode, token); });
       var rows = res;
@@ -954,7 +1120,7 @@
         if (preview.current_response) {
           rsvpStatus(token, null).then(function (sres) {
             if (sres.timedOut) return renderNetworkError(function () { init(rootNode, token); });
-            if (sres.data && sres.data.status === "ok") return renderThankYou(token, sres.data, null);
+            if (sres.data && sres.data.status === "ok") return renderThankYou(token, sres.data, null, preview);
             renderAnswerForm(token, preview, null, { alreadyResponse: preview.current_response });
           });
         } else {
