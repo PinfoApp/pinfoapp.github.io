@@ -196,19 +196,21 @@
     .modal-sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
     .modal-card .qr-line { justify-content: center; margin-top: 0; }
 
-    /* ---- Wider desktop layout (simple card only; phone width unchanged) --- */
+    /* ---- Desktop touches (simple card only) -------------------------------
+       Card stays the same narrow width as on phone - a PC visitor is just
+       reading it from further away, not holding it. Only two things change:
+       buttons stop stretching edge-to-edge (nobody's tapping with a thumb),
+       and the QR code gets big enough to actually scan off a screen. */
     @media (min-width: 760px) {
       body { padding: 48px 24px; }
-      .card { max-width: 1000px; }
-      #simple-card .cover { aspect-ratio: 21 / 7; }
-      #simple-card .body { padding: 36px 48px 44px; }
-      #simple-card h1 { font-size: 30px; }
-      #simple-card .details, #simple-card .description { max-width: 680px; }
-      #simple-card .qr-line {
-        margin-top: 28px; padding: 14px 18px; background: var(--install-tint);
-        border-radius: 14px; gap: 14px; max-width: 680px;
+      #simple-card .btn {
+        display: inline-block; width: auto; min-width: 200px; padding: 14px 32px;
       }
-      #simple-card .qr-line img { width: 60px; height: 60px; }
+      #simple-card .qr-line {
+        margin-top: 20px; padding: 14px 18px; background: var(--install-tint);
+        border-radius: 14px; gap: 14px;
+      }
+      #simple-card .qr-line img { width: 72px; height: 72px; }
       #simple-card .qr-line span { font-size: 14px; }
     }
   </style>
