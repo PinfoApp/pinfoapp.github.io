@@ -38,6 +38,7 @@
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; height: 100%; }
+    html { background: var(--bg); }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(160deg, #ede9fe 0%, var(--bg) 55%);
@@ -160,6 +161,54 @@
     .open-invite-link { text-align: center; color: var(--indigo); font-size: 13px; }
     .qr-code { display: block; margin: 6px auto 0; border-radius: 8px; }
     .qr-caption { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+
+    /* ---- Description show-more (simple card) ----------------------------- */
+    .description.clamped {
+      display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .show-more-btn {
+      display: block; background: none; border: none; color: var(--indigo);
+      font-weight: 600; font-size: 14px; padding: 2px 0 0; margin: 0; cursor: pointer;
+      text-align: left; font-family: inherit;
+    }
+
+    /* ---- Interested modal (simple card, public events) -------------------- */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(28, 28, 40, 0.45);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      z-index: 50;
+    }
+    .modal-card {
+      background: var(--card); border-radius: 20px; padding: 28px 24px;
+      max-width: 360px; width: 100%; text-align: center; position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+    .modal-close {
+      position: absolute; top: 10px; right: 10px; background: none; border: none;
+      font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 8px;
+    }
+    .modal-heading { font-size: 19px; font-weight: 800; margin: 8px 0 8px; }
+    .modal-sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+    .modal-card .qr-line { justify-content: center; margin-top: 0; }
+
+    /* ---- Desktop touches (simple card only) -------------------------------
+       Card stays the same narrow width as on phone - a PC visitor is just
+       reading it from further away, not holding it. Only two things change:
+       buttons stop stretching edge-to-edge (nobody's tapping with a thumb),
+       and the QR code gets big enough to actually scan off a screen. */
+    @media (min-width: 760px) {
+      body { padding: 48px 24px; }
+      #simple-card .btn {
+        display: inline-block; width: auto; min-width: 200px; padding: 14px 32px;
+      }
+      #simple-card .qr-line {
+        margin-top: 20px; padding: 14px 18px; background: var(--install-tint);
+        border-radius: 14px; gap: 14px;
+      }
+      #simple-card .qr-line img { width: 72px; height: 72px; }
+      #simple-card .qr-line span { font-size: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -169,9 +218,28 @@
     <img id="cover" class="cover" alt="" />
     <div class="body">
       <span class="brand"><span class="dot"></span> Pinfo</span>
-      <p id="platform-note" class="platform-note hidden">Pinfo is on iPhone for now. You can answer and see everything about this event here.</p>
+      <p id="platform-note" class="platform-note hidden">Pinfo is on iPhone for now. Everything about this event is here.</p>
       <h1 id="title" class="skeleton">Loading event...</h1>
       <p id="meta" class="meta skeleton">&nbsp;</p>
+
+      <!-- Interested is shown for any event that resolves here at all -
+           row-level security already keeps a private event's row from
+           coming back to an anonymous request, so every event reaching
+           this page is public. It never claims or stores anything; it
+           just opens a small prompt pointing at the app. -->
+      <button type="button" id="interested-btn" class="btn btn-primary hidden">Interested</button>
+
+      <!-- get-pinfo shows on iPhone for any event, with or without a magic
+           invite link, so a phone-only visitor without the app has a clear
+           way to get it. open-invite and its hint are shown only for magic
+           invite links (?t=<token> present) - the token is never sent
+           anywhere or validated here, claiming an invite happens only
+           inside the app, via an authenticated call. -->
+      <div id="actions">
+        <a id="get-pinfo" class="btn btn-primary hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
+        <a id="open-invite" class="btn btn-store hidden" href="#">I have Pinfo - open my invite</a>
+        <p id="open-invite-hint" class="hint hidden">Installed Pinfo? Tap 'open my invite' to join.</p>
+      </div>
 
       <div id="details" class="details hidden">
         <p id="host-line" class="meta-sub hidden"></p>
@@ -180,15 +248,7 @@
           <p class="address-line" id="venue-address"></p>
         </div>
         <p id="description-text" class="description hidden"></p>
-      </div>
-
-      <!-- Only shown for magic invite links (?t=<token> present) on iPhone.
-           The token is never sent anywhere or validated here - claiming an
-           invite happens only inside the app, via an authenticated call. -->
-      <div id="actions" class="hidden">
-        <a id="get-pinfo" class="btn btn-primary" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
-        <a id="open-invite" class="btn btn-store" href="#">I have Pinfo - open my invite</a>
-        <p id="open-invite-hint" class="hint">Installed Pinfo? Tap 'open my invite' to join.</p>
+        <button type="button" id="description-more" class="show-more-btn hidden">Show more</button>
       </div>
 
       <!-- Desktop only: a quiet nudge instead of the full app-install card. -->
@@ -196,6 +256,23 @@
         <img id="qr-line-img" src="/assets/appstore-qr.svg" alt="Scan with your iPhone camera" width="88" height="88" />
         <span>Got an iPhone? Get Pinfo</span>
       </p>
+
+      <!-- Opened by #interested-btn. Tapping Interested never claims or
+           stores anything server-side - it only opens this prompt, with
+           whichever action fits the visitor's platform. -->
+      <div id="interested-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+          <button type="button" id="interested-close" class="modal-close" aria-label="Close">&times;</button>
+          <h2 class="modal-heading">Get Pinfo to save this event</h2>
+          <p class="modal-sub">Save it, see who's going and get a reminder in the app.</p>
+          <a id="interested-appstore" class="btn btn-primary hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
+          <p id="interested-qr" class="qr-line hidden">
+            <img src="/assets/appstore-qr.svg" alt="Scan with your iPhone camera" width="88" height="88" />
+            <span>Got an iPhone? Get Pinfo</span>
+          </p>
+          <p id="interested-android-note" class="hint hidden">Pinfo is on iPhone for now.</p>
+        </div>
+      </div>
 
       <!-- Shown instead of #actions when the event id/code can't be
            resolved (unknown, cancelled, or private to this visitor). The
@@ -340,8 +417,24 @@
     function activateInvite(id, token) {
       document.getElementById("open-invite").href =
         "pinfo://event/" + id + "?t=" + encodeURIComponent(token);
-      document.getElementById("actions").classList.remove("hidden");
+      document.getElementById("open-invite").classList.remove("hidden");
+      document.getElementById("open-invite-hint").classList.remove("hidden");
     }
+
+    // Interested never claims or stores anything on the server - it only
+    // opens this prompt. Wired once; render() below just decides which
+    // button/QR/note inside it fits the visitor's platform.
+    (function () {
+      var btn = document.getElementById("interested-btn");
+      var modal = document.getElementById("interested-modal");
+      var closeBtn = document.getElementById("interested-close");
+      if (!btn || !modal || !closeBtn) return;
+      btn.addEventListener("click", function () { modal.classList.remove("hidden"); });
+      closeBtn.addEventListener("click", function () { modal.classList.add("hidden"); });
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal) modal.classList.add("hidden");
+      });
+    })();
 
     // ---- Render the page from event data -------------------------------------
     function fmtDate(iso) {
@@ -487,30 +580,79 @@
         venueEl.classList.add("hidden");
       }
       var descEl = document.getElementById("description-text");
+      var showMoreBtn = document.getElementById("description-more");
       if (ev.description) {
-        descEl.textContent = ev.description;
+        var desc = ev.description;
+        // Some imported listings are truncated upstream, mid-word, with no
+        // sign of it. A trailing ellipsis makes that visually honest
+        // instead of looking like a sentence that just stops.
+        if (!/[.!?…"'”)\]]\s*$/.test(desc)) desc = desc.replace(/\s+$/, "") + "…";
+        descEl.textContent = desc;
         descEl.classList.remove("hidden");
+        descEl.classList.add("clamped");
+        if (showMoreBtn) {
+          showMoreBtn.classList.add("hidden");
+          showMoreBtn.onclick = function () {
+            descEl.classList.remove("clamped");
+            showMoreBtn.classList.add("hidden");
+          };
+          requestAnimationFrame(function () {
+            if (descEl.scrollHeight > descEl.clientHeight + 2) showMoreBtn.classList.remove("hidden");
+          });
+        }
       } else {
         descEl.classList.add("hidden");
+        if (showMoreBtn) showMoreBtn.classList.add("hidden");
       }
       detailsEl.classList.toggle("hidden", !(ev.host_name || (loc && (loc.title || loc.address)) || ev.description));
 
-      // Buttons that only make sense with the app installed (iOS) stay as
-      // they were; Android gets nothing here (there is no app for it to
-      // open), desktop gets a small, quiet QR nudge instead.
-      var openInvite = document.getElementById("open-invite");
-      if (openInvite) openInvite.classList.toggle("hidden", ended);
-      var openInviteHint = document.getElementById("open-invite-hint");
-      if (openInviteHint) openInviteHint.classList.toggle("hidden", ended);
-      if (!ios) document.getElementById("actions").classList.add("hidden");
+      // Get Pinfo shows for any iPhone visitor, with or without a magic
+      // invite link. Open-invite (and its hint) only make sense with a
+      // link's own token, so activateInvite() is the only thing that ever
+      // unhides them; this only ever re-hides them, once the event has
+      // ended or on a platform with no app to open them in. Android gets
+      // neither button; desktop gets a small, quiet QR nudge instead.
+      var getPinfoBtn = document.getElementById("get-pinfo");
+      if (getPinfoBtn) getPinfoBtn.classList.toggle("hidden", !ios);
+      if (!ios || ended) {
+        var openInvite = document.getElementById("open-invite");
+        if (openInvite) openInvite.classList.add("hidden");
+        var openInviteHint = document.getElementById("open-invite-hint");
+        if (openInviteHint) openInviteHint.classList.add("hidden");
+      }
       var qrLine = document.getElementById("qr-line");
       if (!ios && !android && !ended) qrLine.classList.remove("hidden");
       else qrLine.classList.add("hidden");
 
       var cover = ev.cover_url_app || ev.image_url || ev.cover_url_original;
       var img = document.getElementById("cover");
+      // If the cover host blocks the request (hotlink protection or
+      // similar), never leave alt text - or even the browser's own
+      // broken-image icon, which clearing src/alt alone doesn't reliably
+      // clear - sitting over the placeholder. Swap the <img> itself for a
+      // plain div that keeps the same gradient background via the shared
+      // .cover class.
+      img.onerror = function () {
+        var placeholder = document.createElement("div");
+        placeholder.id = "cover";
+        placeholder.className = "cover";
+        img.replaceWith(placeholder);
+      };
       if (cover) { img.src = cover; img.alt = ev.title || "Event cover"; }
       else { img.remove(); }
+
+      // Interested shows for any event that resolves (always public, see
+      // above) - it never claims or stores an answer, just opens the
+      // prompt below.
+      var interestedBtn = document.getElementById("interested-btn");
+      if (interestedBtn) interestedBtn.classList.remove("hidden");
+      if (ios) {
+        document.getElementById("interested-appstore").classList.remove("hidden");
+      } else if (android) {
+        document.getElementById("interested-android-note").classList.remove("hidden");
+      } else {
+        document.getElementById("interested-qr").classList.remove("hidden");
+      }
 
       if (ev.title) {
         document.title = ev.title + " - Pinfo";
