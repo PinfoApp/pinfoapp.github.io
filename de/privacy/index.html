@@ -84,10 +84,10 @@ der Europäischen Union, betrieben, und unsere Daten liegen in erster Linie in d
     ein Pinfo-Konto erstellst, wird deine Nummer 90 Tage nach der Veranstaltung gelöscht. Mit
     deiner Antwort bestätigst du, dass du mindestens 18 Jahre alt bist.</li>
   <li><strong>Stimme und Text für „Say it“ (nur wenn du es nutzt).</strong> Wenn du eine
-    Veranstaltung mit „Say it“ erstellst, werden die Aufnahme deiner Stimme (wenn du sprichst)
-    und der Text, den du sagst oder tippst, an unseren KI-Anbieter OpenAI gesendet, um sie zu
-    transkribieren und in Angaben zur Veranstaltung umzuwandeln (siehe Abschnitt 3). Pinfo
-    speichert deine Sprachaufnahmen nicht; die daraus entstehenden Angaben werden als Teil
+    Veranstaltung mit „Say it“ erstellst, wird der Text, den du sagst oder tippst, an einen
+    KI-Anbieter gesendet, um daraus Angaben zur Veranstaltung zu machen, und die Aufnahme deiner
+    Stimme (wenn du sprichst) wird zur Transkription an OpenAI gesendet (siehe Abschnitt 3).
+    Pinfo speichert deine Sprachaufnahmen nicht; die daraus entstehenden Angaben werden als Teil
     deiner Veranstaltung oder deines Entwurfs gespeichert.</li>
   <li><strong>Benachrichtigungen.</strong> Ein Push-Token, damit wir dir Mitteilungen senden
     können (zum Beispiel Antworten auf deine Veranstaltungen oder neue Nachrichten).</li>
@@ -119,11 +119,13 @@ Veranstaltungen ab. Sollte sich das ändern, beschreiben wir zusätzlich erhoben
 Datenschutzerklärung, bevor die Funktion startet.</p>
 
 <h2 id="ai">3. KI-Funktionen („Say it“)</h2>
-<p>Wenn du eine Veranstaltung mit „Say it“ erstellst, werden die Worte, die du sagst oder
-tippst, an unseren KI-Anbieter OpenAI gesendet, um daraus Angaben zur Veranstaltung zu machen.
-Wenn du deine Stimme nutzt, wird die Aufnahme zur Transkription an OpenAI gesendet. Pinfo
-speichert deine Sprachaufnahmen nicht. OpenAI verarbeitet diese Daten in unserem Auftrag und
-nutzt sie nach seinen API-Bedingungen nicht zum Training seiner Modelle.</p>
+<p>„Say it“ nutzt KI-Modelle externer Anbieter, derzeit OpenAI und Anthropic (Claude). Pinfo kann
+künftig weitere KI-Anbieter nutzen. Wenn du eine Veranstaltung mit „Say it“ erstellst, werden
+die Worte, die du sagst oder tippst, an einen KI-Anbieter gesendet, um daraus Angaben zur
+Veranstaltung zu machen. Wenn du deine Stimme nutzt, wird die Aufnahme zur Transkription an
+OpenAI gesendet. Pinfo speichert deine Sprachaufnahmen nicht. OpenAI verarbeitet die Daten, die
+es erhält, in unserem Auftrag und nutzt sie nach seinen API-Bedingungen nicht zum Training
+seiner Modelle.</p>
 
 <h2>4. Kontakte</h2>
 <p>Pinfo fragt nur dann nach Zugriff auf deine Kontakte, wenn du Personen zu einer
@@ -194,6 +196,8 @@ beschrieben:</p>
     und in der Schweiz OpenAI Ireland Limited) - verarbeitet, was du bei „Say it“ sagst oder
     tippst, um Angaben zur Veranstaltung zu erstellen, und transkribiert Sprachaufnahmen für
     „Say it“.</li>
+  <li><strong>Anthropic (Claude)</strong> - verarbeitet, was du bei „Say it“ sagst oder tippst,
+    um Angaben zur Veranstaltung zu erstellen.</li>
   <li><strong>Apple</strong> - App Store und In-App-Käufe (Abrechnung von Abonnements) sowie
     Apple Maps für die Kartenanzeige.</li>
   <li><strong>Google Kalender</strong> - nur wenn du ihn verbindest, damit wir Veranstaltungen,
