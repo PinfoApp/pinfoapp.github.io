@@ -32,7 +32,7 @@
   <a href="/de/privacy">Deutsch</a>
 </header>
 <h1>Privacy Policy</h1>
-<p class="updated">Last updated: 12 November 2026</p>
+<p class="updated">Last updated: 24 November 2026</p>
 
 <p>This Privacy Policy explains how <strong>Pinfo</strong> ("Pinfo", "we", "us") collects,
 uses, and shares information when you use the Pinfo mobile app and related services
@@ -89,33 +89,83 @@ of the European Union, and our primary data hosting is located in the EU.</p>
   <li><strong>Purchases.</strong> Whether you have an active subscription or are otherwise
     entitled to paid features. Payments are processed by Apple; we do not receive or store your
     payment card details.</li>
-  <li><strong>Device and diagnostic data.</strong> Your device platform, operating system
-    version, app version, a session identifier, and error/diagnostic logs, which help us find
-    and fix problems.</li>
-  <li><strong>Crash reports.</strong> If the app crashes, Google Firebase Crashlytics receives
-    a crash report: your device model, operating system and app version, technical details of
-    the crash, the names of the last screens you used (never their content), and your Pinfo
-    user ID, so we can find and fix the problem.</li>
+  <li><strong>Device data and technical error notes (no choice).</strong> Your device platform,
+    operating system version, app version and a session identifier. When something you do fails
+    (for example a request or an upload), the app sends a short technical note: the step, an
+    error code, the app version and, when you are signed in, your account id. During sign-in the
+    app notes the steps of the attempt as fixed words, never your phone number. We use these
+    notes to notice and fix faults and keep them for 30 days (section 9). They do not depend on
+    your choice in section 2a. Legal basis: our legitimate interest in noticing and fixing
+    faults (section 6).</li>
+  <li><strong>Crash reports (app versions before 2.0.97).</strong> If the app crashes, Google
+    Firebase Crashlytics receives a crash report: your device model, operating system and app
+    version, technical details of the crash, the names of the last screens you used (never their
+    content), and your Pinfo user ID, so we can find and fix the problem. From app version
+    2.0.97 see section 2a.</li>
   <li><strong>Days you use the app.</strong> We record the days on which you open the app (one
     entry per day), to understand how many people come back to Pinfo. It is deleted with your
     account.</li>
-  <li><strong>Usage data.</strong> Pinfo records which screens of the app are opened and whether
+  <li><strong>Usage data (app versions before 2.0.97).</strong> Pinfo records which screens of the app are opened and whether
     actions such as creating an event, answering an invitation or sending a message worked,
     together with the app version, the iOS version, a random number made for this installation
     and, when you are signed in, your account. It does not record what you type, your contacts,
     your location or the content of events and messages. These records are kept for up to six
     months and are used only to find and fix problems and to improve the app. They are not shared
-    with anyone and not used for advertising.</li>
+    with anyone and not used for advertising. From app version 2.0.97 see section 2a.</li>
 </ul>
 <p>Pinfo does not currently sell event tickets or process payments for event admission. If that
 changes, we will update this Privacy Policy to describe any additional data collected before the
 feature launches.</p>
 
+<h2>2a. Crash reports and usage statistics: only with your yes</h2>
+<p>From app version 2.0.97, Pinfo asks you once whether we may collect crash reports and usage
+statistics. When you sign up, this is a box that is not ticked. If you already have an account,
+you see a one-time sheet. You can change your choice at any time in the app: Profile &rarr;
+Application settings &rarr; "Crash reports and statistics". Saying no changes nothing about
+using Pinfo.</p>
+<p>If you say yes, we collect:</p>
+<ul>
+  <li><strong>Crash reports</strong> through Firebase Crashlytics (Google): technical details of
+    the crash (device model, iOS version, app version, the place in the code, the names of the
+    last screens) and our internal account id.</li>
+  <li><strong>Usage statistics</strong> that we keep ourselves in our database (Supabase, EU):
+    which screens are opened and which actions are used, as fixed words, with a random id the
+    app makes for the installation, the app and iOS version, and your account id when you are
+    signed in. Never names, phone numbers, message texts, event titles or locations. Single
+    entries are kept for up to six months; after that only daily totals without any id
+    remain.</li>
+</ul>
+<p>Our legal basis is your consent (Article 6(1)(a) GDPR, section 25(1) TDDDG). If you withdraw
+it, the collection stops from that moment, and crash reports not yet sent and the installation
+id are deleted. If you say no, and if you use the app without an account, none of this is
+collected.</p>
+<p>App versions before 2.0.97 do not have this choice. For them, the descriptions of "Crash
+reports" and "Usage data" in section 2 apply; those descriptions apply only to app versions
+before 2.0.97.</p>
+
+<h2>2b. Public events from other platforms</h2>
+<p><em>Information under Article 14 GDPR.</em> Some public events shown in Pinfo come from public
+listings on Resident Advisor, Lu.ma, Eventbrite and DICE. These listings can contain personal
+data of people named there: organisers, promoters, artists in a line-up and sometimes a contact
+name.</p>
+<ul>
+  <li><strong>Source.</strong> The public listing. For each event, the app names the source and
+    links to it.</li>
+  <li><strong>Purpose.</strong> Showing public events near you.</li>
+  <li><strong>Legal basis.</strong> Our legitimate interest (Article 6(1)(f) GDPR).</li>
+  <li><strong>Storage.</strong> Until 90 days after the event.</li>
+  <li><strong>Your rights.</strong> If you are named in an event, you can object, or ask us to
+    remove or correct the entry, at <a href="mailto:pinfoapp@gmail.com">pinfoapp@gmail.com</a>
+    (see also <a href="/remove-event">Have an event removed</a>). We act on it without undue
+    delay.</li>
+</ul>
+
 <h2 id="ai">3. AI features (Say it)</h2>
 <p>When you create an event with "Say it", the words you say or type are sent to our AI
 provider, OpenAI, to turn them into event details. If you use your voice, the recording is
 sent to OpenAI to be transcribed. Pinfo does not store your voice recordings. OpenAI processes
-this data on our behalf and, under its API terms, does not use it to train its models.</p>
+this data on our behalf and, under its API terms, does not use it to train its models. OpenAI
+may keep the content for up to 30 days to detect abuse and then deletes it.</p>
 
 <h2>4. Contacts</h2>
 <p>Pinfo asks for access to your contacts only when you invite people to an event, and we
@@ -154,12 +204,16 @@ explain why before iOS shows its own permission prompt.</p>
 <ul>
   <li>performance of a contract (Article 6(1)(b) GDPR), to provide the Service you use;</li>
   <li>your consent (Article 6(1)(a) GDPR) for access to contacts, precise location, and push
-    notifications. You can withdraw it at any time in your device settings, without affecting
-    the lawfulness of processing before withdrawal;</li>
+    notifications and, from app version 2.0.97, for crash reports and usage statistics (section
+    2a). You can withdraw it at any time, in your device settings or, for crash reports and
+    usage statistics, in the app, without affecting the lawfulness of processing before
+    withdrawal;</li>
   <li>our legitimate interests (Article 6(1)(f) GDPR), to keep the Service secure, prevent
-    abuse, and improve the product. This includes crash reports and the record of the days you
-    use the app (to keep the app working and to understand whether people come back), as well
-    as the contact match (to show you which contacts are already on Pinfo);</li>
+    abuse, and improve the product. This includes crash reports and usage statistics in app
+    versions before 2.0.97, technical error notes (to notice and fix faults), the record of the
+    days you use the app (to keep the app working and to understand whether people come back),
+    the contact match (to show you which contacts are already on Pinfo), and showing public
+    events from other platforms (section 2b);</li>
   <li>legal obligations (Article 6(1)(c) GDPR), where applicable.</li>
 </ul>
 
@@ -212,10 +266,15 @@ transmission or storage is completely secure.</p>
   <li>Account and content data are kept for as long as your account exists.</li>
   <li>If you delete your account, it is first deactivated and can be restored by signing in
     again within 30 days; after that it is deleted.</li>
-  <li>Diagnostic/error logs are automatically deleted after about 30 days.</li>
+  <li>Technical error notes and diagnostic logs are automatically deleted after 30 days.</li>
   <li>Crash reports are kept by Google for up to 90 days.</li>
+  <li>Usage statistics (section 2a): single entries are kept for up to six months; after that
+    only daily totals without any id remain.</li>
   <li>The record of the days you used the app is deleted with your account.</li>
-  <li>Aggregated public event listings are pruned after about 90 days.</li>
+  <li>Public events from other platforms (section 2b) are kept until 90 days after the
+    event.</li>
+  <li>Content you send to OpenAI with "Say it" may be kept by OpenAI for up to 30 days to detect
+    abuse and is then deleted (section 3).</li>
   <li>Messages are retained until you or the other participant delete them, or until your
     account is deleted. Messages you have sent to others may remain visible in their
     conversation even after you delete your account.</li>
@@ -234,8 +293,9 @@ Informationsfreiheit), which is responsible for us.</p>
 
 <div class="note">
 <strong>Your right to object (Article 21 GDPR).</strong> Where we rely on our legitimate interests (keeping the
-Service secure, preventing abuse, crash reports, understanding whether people come back, the
-contact match), you can object at any time, on grounds relating to your particular situation, by
+Service secure, preventing abuse, crash reports and usage statistics in app versions before
+2.0.97, technical error notes, understanding whether people come back, the contact match, public
+events from other platforms), you can object at any time, on grounds relating to your particular situation, by
 writing to <a href="mailto:pinfoapp@gmail.com">pinfoapp@gmail.com</a>. We then stop, unless we
 have compelling legitimate grounds that override your interests, or the processing is needed for
 legal claims.

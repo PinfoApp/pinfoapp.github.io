@@ -86,6 +86,7 @@
       ageConfirm: "By answering you confirm that you are 18 or older.",
       privacyGroupPrefix: "We use your number only to confirm it's you and to carry your answer into Pinfo if you join with it. We delete it 90 days after the event. Details in our ",
       privacyPolicyLinkText: "privacy policy",
+      privacyPolicyUrl: "https://pinfoapp.com/privacy",
       phoneLabel: "Phone number",
       sendCode: "Send code",
       codeLabel: "Enter the 6-digit code",
@@ -164,6 +165,7 @@
       ageConfirm: "Mit deiner Antwort bestätigst du, dass du mindestens 18 Jahre alt bist.",
       privacyGroupPrefix: "Wir verwenden deine Nummer nur, um zu bestätigen, dass du es bist, und um deine Antwort zu Pinfo zu übertragen, falls du dich damit anmeldest. Wir löschen sie 90 Tage nach der Veranstaltung. Details in unserer ",
       privacyPolicyLinkText: "Datenschutzerklärung",
+      privacyPolicyUrl: "https://pinfoapp.com/de/privacy",
       phoneLabel: "Telefonnummer",
       sendCode: "Code senden",
       codeLabel: "Gib den 6-stelligen Code ein",
@@ -485,7 +487,7 @@
   function privacyGroupLine() {
     return el("p", { class: "privacy-line" }, [
       S.privacyGroupPrefix,
-      el("a", { href: "https://pinfoapp.com/privacy", target: "_blank", rel: "noopener", text: S.privacyPolicyLinkText }),
+      el("a", { href: S.privacyPolicyUrl, target: "_blank", rel: "noopener", text: S.privacyPolicyLinkText }),
       "."
     ]);
   }
@@ -697,11 +699,13 @@
     contentEl.appendChild(card([
       el("h2", { class: "rsvp-heading", text: preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "") }),
       el("p", { class: "meta", text: S.groupSub }),
+      // The privacy policy link sits above the phone number field, so it is
+      // visible before anyone types a number (not only further down).
+      privacyGroupLine(),
       el("div", { class: "field phone-row" }, [countrySelect, numberInput]),
       errorEl,
       sendBtn,
-      recaptchaDiv,
-      privacyGroupLine()
+      recaptchaDiv
     ]));
   }
 

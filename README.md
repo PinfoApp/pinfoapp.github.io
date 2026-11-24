@@ -8,6 +8,8 @@ Source for [pinfoapp.com](https://pinfoapp.com), Pinfo's marketing website, serv
 - `privacy/index.html` — privacy policy, served at `/privacy`
 - `tos/index.html` — terms of service, served at `/tos`
 - `site-notice/index.html` — German Impressum (site notice), served at `/site-notice`
+- `remove-event/index.html` - "Have an event removed" page for organisers, platforms and
+  rights holders, served at `/remove-event` (German: `de/remove-event/index.html`)
 - `event/index.html` — event landing page, served at `/event`
 - `404.html` — catch-all fallback that also handles per-event links
   (`/event/<uuid>`) on GitHub Pages, since GitHub Pages has no server-side
