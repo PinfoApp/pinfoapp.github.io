@@ -32,7 +32,7 @@
   <a href="/privacy">English</a>
 </header>
 <h1>Datenschutzerklärung</h1>
-<p class="updated">Stand: 12. November 2026</p>
+<p class="updated">Stand: 24. November 2026</p>
 
 <p>Diese Datenschutzerklärung erklärt, wie Pinfo („Pinfo“, „wir“, „uns“) Informationen erhebt,
 nutzt und weitergibt, wenn du die mobile App Pinfo und die zugehörigen Dienste (der „Dienst“)
@@ -94,17 +94,24 @@ der Europäischen Union, betrieben, und unsere Daten liegen in erster Linie in d
   <li><strong>Käufe.</strong> Ob du ein aktives Abonnement hast oder anderweitig Zugang zu
     kostenpflichtigen Funktionen. Zahlungen wickelt Apple ab; wir erhalten und speichern keine
     Kartendaten.</li>
-  <li><strong>Geräte- und Diagnosedaten.</strong> Die Plattform deines Geräts, die Version des
-    Betriebssystems und der App, eine Sitzungskennung sowie Fehler- und Diagnoseprotokolle, mit
-    denen wir Probleme finden und beheben.</li>
-  <li><strong>Absturzberichte.</strong> Wenn die App abstürzt, erhält Google Firebase
-    Crashlytics einen Absturzbericht: dein Gerätemodell, Betriebssystem und App-Version,
-    technische Angaben zum Absturz, die Namen der zuletzt genutzten Bildschirme (nie deren
-    Inhalt) und deine Pinfo-Nutzerkennung, damit wir das Problem finden und beheben können.</li>
+  <li><strong>Gerätedaten und technische Fehlervermerke (keine Wahl).</strong> Die Plattform
+    deines Geräts, die Version des Betriebssystems und der App sowie eine Sitzungskennung. Wenn
+    etwas, das du tust, fehlschlägt (zum Beispiel eine Anfrage oder ein Upload), sendet die App
+    einen kurzen technischen Vermerk: den Schritt, einen Fehlercode, die App-Version und, wenn
+    du angemeldet bist, deine Konto-ID. Bei der Anmeldung vermerkt die App die Schritte des
+    Versuchs als feste Begriffe, nie die Telefonnummer. Wir nutzen diese Vermerke, um Störungen
+    zu bemerken und zu beheben, und bewahren sie 30 Tage auf (Abschnitt 9). Sie hängen nicht von
+    deiner Wahl in Abschnitt 2a ab. Rechtsgrundlage: unser berechtigtes Interesse, Störungen zu
+    bemerken und zu beheben (Abschnitt 6).</li>
+  <li><strong>Absturzberichte (App-Versionen vor 2.0.97).</strong> Wenn die App abstürzt, erhält
+    Google Firebase Crashlytics einen Absturzbericht: dein Gerätemodell, Betriebssystem und
+    App-Version, technische Angaben zum Absturz, die Namen der zuletzt genutzten Bildschirme (nie
+    deren Inhalt) und deine Pinfo-Nutzerkennung, damit wir das Problem finden und beheben
+    können. Ab App-Version 2.0.97 siehe Abschnitt 2a.</li>
   <li><strong>Tage, an denen du die App nutzt.</strong> Wir speichern die Tage, an denen du die
     App öffnest (ein Eintrag pro Tag), um zu verstehen, wie viele Menschen zu Pinfo
     zurückkommen. Der Eintrag wird mit deinem Konto gelöscht.</li>
-  <li><strong>Nutzungsdaten.</strong> Pinfo erfasst, welche Bildschirme der App geöffnet werden
+  <li><strong>Nutzungsdaten (App-Versionen vor 2.0.97).</strong> Pinfo erfasst, welche Bildschirme der App geöffnet werden
     und ob Aktionen wie das Erstellen einer Veranstaltung, das Beantworten einer Einladung oder
     das Senden einer Nachricht funktioniert haben, zusammen mit der App-Version, der
     iOS-Version, einer Zufallszahl, die für diese Installation erzeugt wird, und, wenn du
@@ -112,18 +119,64 @@ der Europäischen Union, betrieben, und unsere Daten liegen in erster Linie in d
     Standort oder die Inhalte von Veranstaltungen und Nachrichten. Diese Aufzeichnungen werden
     bis zu sechs Monate lang aufbewahrt und nur verwendet, um Probleme zu finden und zu beheben
     und die App zu verbessern. Sie werden an niemanden weitergegeben und nicht für Werbung
-    verwendet.</li>
+    verwendet. Ab App-Version 2.0.97 siehe Abschnitt 2a.</li>
 </ul>
 <p>Pinfo verkauft derzeit keine Tickets und wickelt keine Zahlungen für den Einlass zu
 Veranstaltungen ab. Sollte sich das ändern, beschreiben wir zusätzlich erhobene Daten in dieser
 Datenschutzerklärung, bevor die Funktion startet.</p>
+
+<h2>2a. Absturzberichte und Nutzungsstatistiken: nur mit deinem Ja</h2>
+<p>Ab der App-Version 2.0.97 fragt dich Pinfo einmal, ob wir Absturzberichte und
+Nutzungsstatistiken erheben dürfen. Bei der Anmeldung ist das ein Kästchen, das nicht angekreuzt
+ist. Wenn du schon ein Konto hast, siehst du einmalig ein Fenster dazu. Du kannst deine
+Entscheidung jederzeit in der App ändern: „Profile“ &rarr; „Application settings“ &rarr; „Crash
+reports and statistics“. Ein Nein ändert nichts daran, wie du Pinfo nutzen kannst.</p>
+<p>Wenn du Ja sagst, erheben wir:</p>
+<ul>
+  <li><strong>Absturzberichte</strong> über Firebase Crashlytics (Google): technische Angaben
+    zum Absturz (Gerätemodell, iOS-Version, App-Version, die Stelle im Code, die Namen der
+    zuletzt genutzten Bildschirme) und unsere interne Konto-ID.</li>
+  <li><strong>Nutzungsstatistiken</strong>, die wir selbst in unserer Datenbank speichern
+    (Supabase, EU): welche Bildschirme geöffnet und welche Funktionen genutzt werden, als feste
+    Begriffe, mit einer Zufalls-ID, die die App für die Installation erzeugt, der App- und der
+    iOS-Version und, wenn du angemeldet bist, deiner Konto-ID. Nie Namen, Telefonnummern,
+    Nachrichtentexte, Titel oder Orte von Veranstaltungen. Einzelne Einträge werden bis zu sechs
+    Monate aufbewahrt; danach bleiben nur Tagessummen ohne jede ID.</li>
+</ul>
+<p>Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Wenn
+du sie widerrufst, endet die Erhebung ab diesem Moment, und noch nicht gesendete Absturzberichte
+und die Installations-ID werden gelöscht. Wenn du Nein sagst und wenn du die App ohne Konto
+nutzt, wird nichts davon erhoben.</p>
+<p>App-Versionen vor 2.0.97 haben diese Wahl nicht. Für sie gelten die Beschreibungen von
+„Absturzberichte“ und „Nutzungsdaten“ in Abschnitt 2; diese Beschreibungen gelten nur für
+App-Versionen vor 2.0.97.</p>
+
+<h2>2b. Öffentliche Veranstaltungen von anderen Plattformen</h2>
+<p><em>Information nach Art. 14 DSGVO.</em> Einige öffentliche Veranstaltungen in Pinfo stammen
+aus öffentlichen Angeboten auf Resident Advisor, Lu.ma, Eventbrite und DICE. Diese Angebote
+können personenbezogene Daten von Personen enthalten, die dort genannt werden: Veranstalter,
+Promoter, Künstler in einem Line-up und manchmal den Namen einer Kontaktperson.</p>
+<ul>
+  <li><strong>Quelle.</strong> Das öffentliche Angebot. Die App nennt für jede Veranstaltung die
+    Quelle und verlinkt sie.</li>
+  <li><strong>Zweck.</strong> Öffentliche Veranstaltungen in deiner Nähe zeigen.</li>
+  <li><strong>Rechtsgrundlage.</strong> Unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f
+    DSGVO).</li>
+  <li><strong>Speicherdauer.</strong> Bis 90 Tage nach der Veranstaltung.</li>
+  <li><strong>Deine Rechte.</strong> Wenn du in einer Veranstaltung genannt wirst, kannst du
+    widersprechen oder uns bitten, den Eintrag zu entfernen oder zu korrigieren:
+    <a href="mailto:pinfoapp@gmail.com">pinfoapp@gmail.com</a> (siehe auch
+    <a href="/de/remove-event">Veranstaltung entfernen lassen</a>). Wir handeln
+    unverzüglich.</li>
+</ul>
 
 <h2 id="ai">3. KI-Funktionen („Say it“)</h2>
 <p>Wenn du eine Veranstaltung mit „Say it“ erstellst, werden die Worte, die du sagst oder
 tippst, an unseren KI-Anbieter OpenAI gesendet, um daraus Angaben zur Veranstaltung zu machen.
 Wenn du deine Stimme nutzt, wird die Aufnahme zur Transkription an OpenAI gesendet. Pinfo
 speichert deine Sprachaufnahmen nicht. OpenAI verarbeitet diese Daten in unserem Auftrag und
-nutzt sie nach seinen API-Bedingungen nicht zum Training seiner Modelle.</p>
+nutzt sie nach seinen API-Bedingungen nicht zum Training seiner Modelle. OpenAI darf die
+Inhalte bis zu 30 Tage speichern, um Missbrauch zu erkennen, und löscht sie danach.</p>
 
 <h2>4. Kontakte</h2>
 <p>Pinfo fragt nur dann nach Zugriff auf deine Kontakte, wenn du Personen zu einer
@@ -168,14 +221,17 @@ Veranstaltung einlädst, und erklärt den Grund, bevor iOS seine eigene Abfrage 
   <li>die Erfüllung eines Vertrags (Art. 6 Abs. 1 lit. b DSGVO), um den Dienst bereitzustellen,
     den du nutzt;</li>
   <li>deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) für den Zugriff auf Kontakte, den genauen
-    Standort und Push-Benachrichtigungen. Du kannst sie jederzeit in den Einstellungen deines
-    Geräts widerrufen, ohne dass die Rechtmäßigkeit der Verarbeitung bis zum Widerruf berührt
-    wird;</li>
+    Standort und Push-Benachrichtigungen und, ab App-Version 2.0.97, für Absturzberichte und
+    Nutzungsstatistiken (Abschnitt 2a). Du kannst sie jederzeit in den Einstellungen deines
+    Geräts oder, bei Absturzberichten und Nutzungsstatistiken, in der App widerrufen, ohne dass
+    die Rechtmäßigkeit der Verarbeitung bis zum Widerruf berührt wird;</li>
   <li>unsere berechtigten Interessen (Art. 6 Abs. 1 lit. f DSGVO), um den Dienst sicher zu
     halten, Missbrauch zu verhindern und das Produkt zu verbessern. Dazu gehören
-    Absturzberichte und die Aufzeichnung der Tage, an denen du die App nutzt (um die App
-    funktionsfähig zu halten und zu verstehen, ob Menschen wiederkommen), sowie der
-    Kontaktabgleich (um dir zu zeigen, welche Kontakte schon bei Pinfo sind);</li>
+    Absturzberichte und Nutzungsstatistiken in App-Versionen vor 2.0.97, technische
+    Fehlervermerke (um Störungen zu bemerken und zu beheben), die Aufzeichnung der Tage, an
+    denen du die App nutzt (um die App funktionsfähig zu halten und zu verstehen, ob Menschen
+    wiederkommen), der Kontaktabgleich (um dir zu zeigen, welche Kontakte schon bei Pinfo sind)
+    sowie das Anzeigen öffentlicher Veranstaltungen von anderen Plattformen (Abschnitt 2b);</li>
   <li>gesetzliche Pflichten (Art. 6 Abs. 1 lit. c DSGVO), wo sie bestehen.</li>
 </ul>
 
@@ -236,11 +292,17 @@ Speichermethode ist vollkommen sicher.</p>
   <li>Konto- und Inhaltsdaten werden gespeichert, solange dein Konto besteht.</li>
   <li>Wenn du dein Konto löschst, wird es zunächst deaktiviert und kann innerhalb von 30 Tagen
     durch erneute Anmeldung wiederhergestellt werden; danach wird es gelöscht.</li>
-  <li>Diagnose- und Fehlerprotokolle werden nach etwa 30 Tagen automatisch gelöscht.</li>
+  <li>Technische Fehlervermerke und Diagnoseprotokolle werden nach 30 Tagen automatisch
+    gelöscht.</li>
   <li>Absturzberichte bewahrt Google bis zu 90 Tage auf.</li>
+  <li>Nutzungsstatistiken (Abschnitt 2a): Einzelne Einträge werden bis zu sechs Monate
+    aufbewahrt; danach bleiben nur Tagessummen ohne jede ID.</li>
   <li>Die Aufzeichnung der Tage, an denen du die App genutzt hast, wird mit deinem Konto
     gelöscht.</li>
-  <li>Übernommene öffentliche Veranstaltungen werden nach etwa 90 Tagen entfernt.</li>
+  <li>Öffentliche Veranstaltungen von anderen Plattformen (Abschnitt 2b) bleiben bis 90 Tage
+    nach der Veranstaltung gespeichert.</li>
+  <li>Inhalte, die du mit „Say it“ an OpenAI sendest, darf OpenAI bis zu 30 Tage speichern, um
+    Missbrauch zu erkennen; danach werden sie gelöscht (Abschnitt 3).</li>
   <li>Nachrichten werden gespeichert, bis du oder der andere Teilnehmer sie löscht oder bis
     dein Konto gelöscht wird. Nachrichten, die du anderen gesendet hast, können in deren
     Unterhaltung sichtbar bleiben, auch nachdem du dein Konto gelöscht hast.</li>
@@ -259,8 +321,10 @@ Beauftragten für Datenschutz und Informationsfreiheit.</p>
 
 <div class="note">
 <strong>Dein Widerspruchsrecht (Art. 21 DSGVO).</strong> Soweit wir uns auf unsere berechtigten
-Interessen stützen (Sicherheit des Dienstes, Verhinderung von Missbrauch, Absturzberichte, das
-Verständnis, ob Menschen wiederkommen, der Kontaktabgleich), kannst du jederzeit aus Gründen,
+Interessen stützen (Sicherheit des Dienstes, Verhinderung von Missbrauch, Absturzberichte und
+Nutzungsstatistiken in App-Versionen vor 2.0.97, technische Fehlervermerke, das Verständnis, ob
+Menschen wiederkommen, der Kontaktabgleich, öffentliche Veranstaltungen von anderen
+Plattformen), kannst du jederzeit aus Gründen,
 die sich aus deiner besonderen Situation ergeben, widersprechen, indem du an
 <a href="mailto:pinfoapp@gmail.com">pinfoapp@gmail.com</a> schreibst. Wir beenden die
 Verarbeitung dann, es sei denn, wir haben zwingende schutzwürdige Gründe, die deine Interessen

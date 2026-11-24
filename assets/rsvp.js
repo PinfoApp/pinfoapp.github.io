@@ -697,11 +697,13 @@
     contentEl.appendChild(card([
       el("h2", { class: "rsvp-heading", text: preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "") }),
       el("p", { class: "meta", text: S.groupSub }),
+      // The privacy policy link sits above the phone number field, so it is
+      // visible before anyone types a number (not only further down).
+      privacyGroupLine(),
       el("div", { class: "field phone-row" }, [countrySelect, numberInput]),
       errorEl,
       sendBtn,
-      recaptchaDiv,
-      privacyGroupLine()
+      recaptchaDiv
     ]));
   }
 
