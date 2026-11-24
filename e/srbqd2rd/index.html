@@ -3,6 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="referrer" content="origin" />
+  <script>
+    // Show nothing when this page is opened inside another page's frame.
+    (function () {
+      var framed = false;
+      try { framed = window.top !== window.self; } catch (e) { framed = true; }
+      if (framed) {
+        window.pinfoFramed = true;
+        document.documentElement.style.display = "none";
+      }
+    })();
+  </script>
   <title>After The Party: InCorrupto Edition Launch Party - Pinfo</title>
 
   <!-- Smart App Banner. The app-argument is filled per-event by the script. -->
@@ -363,6 +375,7 @@
     var CODE_RE = /^[23456789abcdefghjkmnpqrstuvwxyz]{8}$/;
     var NEW_TOKEN_RE = /^[23456789abcdefghjkmnpqrstuvwxyz]{10}$/;
     var LEGACY_TOKEN_RE = /^[A-Za-z0-9_-]{24}$/;
+    var ID_RE = /^[0-9a-fA-F-]{36}$/;
 
     function parseRoute() {
       var path = location.pathname;
@@ -377,7 +390,7 @@
         return { kind: "invite", token: m[1] };
       }
       var qid = new URLSearchParams(location.search).get("id");
-      if (qid) return { kind: "event", id: qid };
+      if (qid && ID_RE.test(qid)) return { kind: "event", id: qid };
       return { kind: "none" };
     }
 
@@ -692,7 +705,9 @@
     }
 
     var route = parseRoute();
-    if (route.kind === "event") {
+    if (window.pinfoFramed) {
+      // Inside another page's frame: nothing is loaded or shown.
+    } else if (route.kind === "event") {
       finish(route.id, new URLSearchParams(location.search).get("t"));
     } else if (route.kind === "code") {
       supabaseRpc("resolve_event_code", { _code: route.code }).then(function (id) {
