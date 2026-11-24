@@ -492,6 +492,30 @@
     ]);
   }
 
+  // "Verified: <number>" with a way to switch numbers. Group links only,
+  // once the visitor's phone number is verified.
+  function verifiedLine(token, authCtx) {
+    if (!authCtx || !authCtx.phoneDisplay) return null;
+    return el("p", { class: "privacy-line verified-line" }, [
+      S.verifiedPrefix + authCtx.phoneDisplay + " \u00b7 ",
+      el("a", {
+        href: "#", class: "use-another-number", text: S.useAnotherNumber,
+        onclick: function (e) { e.preventDefault(); useAnotherNumber(token); }
+      })
+    ]);
+  }
+
+  // Signs the visitor out of Firebase and starts again at the phone step.
+  function useAnotherNumber(token) {
+    function restart() {
+      firebaseState.confirmationResult = null;
+      firebaseState.verifiedPhone = null;
+      init(root, token);
+    }
+    if (!firebaseState.auth || !firebaseState.authMod) return restart();
+    firebaseState.authMod.signOut(firebaseState.auth).then(restart, restart);
+  }
+
   function card(children) {
     return el("div", { class: "rsvp-screen" }, children);
   }
@@ -605,6 +629,9 @@
     }
 
     var children = [el("h2", { class: "rsvp-heading", text: heading })];
+
+    var verified = verifiedLine(token, authCtx);
+    if (verified) children.push(verified);
 
     // S.groupSub ("Verify your phone number...") belongs on the phone step
     // only - by the time this form shows for a group link, verification is
@@ -949,7 +976,7 @@
       : data.response === "maybe" ? S.thankMaybe
         : S.thankCant((ev && ev.host_name) || "");
 
-    contentEl.appendChild(card([
+    var thankChildren = [
       el("h2", { class: "rsvp-heading", text: thankText }),
       el("a", {
         class: "change-answer-link", href: "#",
@@ -974,7 +1001,10 @@
           });
         }
       })
-    ]));
+    ];
+    var thankVerified = verifiedLine(token, authCtx);
+    if (thankVerified) thankChildren.push(thankVerified);
+    contentEl.appendChild(card(thankChildren));
 
     var keptAnswer = data.response === "going" || data.response === "maybe";
     var android = isAndroid();
