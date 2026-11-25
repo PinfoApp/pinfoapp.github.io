@@ -685,6 +685,23 @@
       }
     }
 
+    // The plain link of a private event: nothing about the event is drawn
+    // here. assets/rsvp.js (loaded only now) asks for a phone check first
+    // and shows the event only to a number on the guest list.
+    function startPrivateLink(id) {
+      document.getElementById("simple-card").classList.add("hidden");
+      var rsvpRoot = document.getElementById("rsvp-root");
+      rsvpRoot.classList.remove("hidden");
+      var script = document.createElement("script");
+      script.src = "/assets/rsvp.js";
+      script.onload = function () { window.PinfoRsvp.initPrivate(rsvpRoot, id); };
+      script.onerror = function () {
+        rsvpRoot.querySelector("#rsvp-content").textContent =
+          "Couldn't reach Pinfo. Check your connection and try again.";
+      };
+      document.head.appendChild(script);
+    }
+
     // Finishes the page for a resolved (or unresolved) event: wires up the
     // smart banner and invite buttons if there's an id/token, then renders
     // either the already-known event data (preloadedEv, used for /i/<token>
@@ -697,6 +714,16 @@
 
       if (preloadedEv !== undefined) {
         render(preloadedEv);
+      } else if (id && !token) {
+        // A public event carries on exactly as before. Only the server
+        // saying "no_access" (a private event) hands over to the phone
+        // check. The two requests run side by side, so a public page is
+        // no slower than it was.
+        var eventRequest = fetchEventById(id);
+        supabaseRpc("event_link_status", { p_event_id: id }).then(function (status) {
+          if (status === "no_access") startPrivateLink(id);
+          else eventRequest.then(render);
+        });
       } else if (id) {
         fetchEventById(id).then(render);
       } else {

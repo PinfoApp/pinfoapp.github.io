@@ -1,9 +1,10 @@
-// Web RSVP flow for magic invite links (/i/<token>).
+// Web RSVP flow for magic invite links (/i/<token>), and the phone check for
+// the plain link of a private event (/event/<uuid>, /e/<code>).
 //
 // Loaded dynamically by event/index.html (and 404.html, its GitHub Pages
-// twin) only when the visited path is an invite link - the plain
-// /event/<uuid> and /e/<code> paths never fetch this file, so they stay as
-// light as before.
+// twin) only when the visited path is an invite link, or when the plain
+// link of an event turns out to be private - the plain links of public
+// events never fetch this file, so they stay as light as before.
 //
 // Talks directly to Supabase from the browser (never proxied through our
 // own server or a Cloudflare Function): the database rate-limits by the
@@ -132,7 +133,17 @@
       downloadIcs: "Download for any calendar",
       keepLinkText: "Keep this link. It always shows the latest time and place, and you can change your answer here.",
       copyLink: "Copy link",
-      linkCopied: "Link copied"
+      linkCopied: "Link copied",
+      privateTitle: "This is a private event.",
+      privateBody: "If you were invited, confirm your phone number to see it.",
+      notInvited: "This number isn't on the guest list. Ask the host to send you an invite link.",
+      unavailableTitle: "This event isn't available",
+      unavailableBody: "It may be private, cancelled, or the link may be wrong. If someone invited you, ask them to send the link again.",
+      tooManyTries: "Too many tries. Try again in a few minutes.",
+      somethingWrong: "Something went wrong. Try again in a moment.",
+      hostLine: "You are the host of this event.",
+      back: "Back",
+      answerToSeeAddress: "Answer to see the address."
     },
     de: {
       invalid: "Dieser Einladungslink ist nicht mehr gültig.",
@@ -211,7 +222,17 @@
       downloadIcs: "Für jeden Kalender herunterladen",
       keepLinkText: "Bewahre diesen Link auf. Er zeigt immer die neueste Zeit und den neuesten Ort, und du kannst hier deine Antwort ändern.",
       copyLink: "Link kopieren",
-      linkCopied: "Link kopiert"
+      linkCopied: "Link kopiert",
+      privateTitle: "Das ist ein privates Event.",
+      privateBody: "Wenn du eingeladen wurdest, bestätige deine Telefonnummer, um es zu sehen.",
+      notInvited: "Diese Nummer steht nicht auf der Gästeliste. Bitte den Gastgeber, dir einen Einladungslink zu schicken.",
+      unavailableTitle: "Dieses Event ist nicht verfügbar",
+      unavailableBody: "Es ist vielleicht privat oder abgesagt, oder der Link ist falsch. Wenn dich jemand eingeladen hat, bitte ihn, dir den Link noch einmal zu schicken.",
+      tooManyTries: "Zu viele Versuche. Versuche es in ein paar Minuten erneut.",
+      somethingWrong: "Etwas ist schiefgelaufen. Versuche es gleich noch einmal.",
+      hostLine: "Du bist der Gastgeber dieses Events.",
+      back: "Zurück",
+      answerToSeeAddress: "Antworte, um die Adresse zu sehen."
     }
   };
   var S = STRINGS[LOCALE];
@@ -392,7 +413,17 @@
     return authedRpc("web_rsvp_status", { p_token: token }, idToken);
   }
 
+  // Set only when this page was opened as the plain link of a private
+  // event (initPrivate below). The invite flow never sets it.
+  var privateEventId = null;
+
   function rsvpAnswer(token, response, name, plusOnes, idToken) {
+    if (privateEventId) {
+      // The phone always comes from the visitor's token, never from here.
+      return authedRpc("web_event_rsvp", {
+        p_event_id: privateEventId, p_response: response, p_name: name || null, p_plus_ones: plusOnes || 0
+      }, idToken);
+    }
     return authedRpc("web_rsvp", {
       p_token: token, p_response: response, p_name: name || null, p_plus_ones: plusOnes || 0
     }, idToken);
@@ -487,9 +518,22 @@
     contentEl = root.querySelector("#rsvp-content");
   }
 
+  // A header that says nothing about the event: the private-link gate and
+  // every answer that must not name it.
+  function setGenericHeader(title, meta) {
+    headerTitle.classList.remove("skeleton");
+    headerMeta.classList.remove("skeleton");
+    headerTitle.textContent = title || "";
+    headerMeta.textContent = meta || "";
+    headerMeta.classList.toggle("hidden", !meta);
+    headerCover.src = COVER_PLACEHOLDER;
+    headerCover.alt = "";
+  }
+
   function setHeader(preview) {
     headerTitle.classList.remove("skeleton");
     headerMeta.classList.remove("skeleton");
+    headerMeta.classList.remove("hidden");
     headerTitle.textContent = preview && preview.title ? preview.title : "";
     var when = preview && preview.date_start ? fmtDateRange(preview.date_start, preview.date_end) : "";
     var where = preview && preview.area ? preview.area : "";
@@ -525,7 +569,8 @@
     function restart() {
       firebaseState.confirmationResult = null;
       firebaseState.verifiedPhone = null;
-      init(root, token);
+      if (privateEventId) initPrivate(root, privateEventId);
+      else init(root, token);
     }
     if (!firebaseState.auth || !firebaseState.authMod) return restart();
     firebaseState.authMod.signOut(firebaseState.auth).then(restart, restart);
@@ -716,10 +761,14 @@
     return phoneModulePromise;
   }
 
-  function renderPhoneStep(token, preview, onVerified) {
+  // opts (all optional): heading ("" for none), hideSub, notice, key (the
+  // name this step remembers its number under).
+  function renderPhoneStep(token, preview, onVerified, opts) {
+    opts = opts || {};
     clear(contentEl);
 
-    var heading = preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "");
+    var heading = opts.heading !== undefined ? opts.heading
+      : preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "");
 
     if (!firebaseConfigured()) {
       contentEl.appendChild(card([
@@ -730,21 +779,21 @@
     }
 
     // Same top of the screen while the phone module loads.
-    contentEl.appendChild(card([
-      el("h2", { class: "rsvp-heading", text: heading }),
-      el("p", { class: "meta", text: S.groupSub })
-    ]));
+    var top = [];
+    if (heading) top.push(el("h2", { class: "rsvp-heading", text: heading }));
+    if (!opts.hideSub) top.push(el("p", { class: "meta", text: S.groupSub }));
+    if (top.length) contentEl.appendChild(card(top));
 
     loadPhoneModule().then(function (phone) {
       phone.renderPhone({
-        token: token, locale: LOCALE, S: S, heading: heading,
+        token: opts.key || token, locale: LOCALE, S: S, heading: heading, hideSub: !!opts.hideSub, notice: opts.notice || null,
         el: el, clear: clear, card: card, privacyGroupLine: privacyGroupLine,
         fmtPhoneDisplay: fmtPhoneDisplay, contentEl: contentEl, rootEl: root,
         sendPhoneCode: sendPhoneCode, confirmPhoneCode: confirmPhoneCode, cancelPhoneCode: cancelPhoneCode,
         onVerified: onVerified
       });
     }, function () {
-      errorRetryScreen(S.networkError, function () { renderPhoneStep(token, preview, onVerified); });
+      errorRetryScreen(S.networkError, function () { renderPhoneStep(token, preview, onVerified, opts); });
     });
   }
 
@@ -968,6 +1017,12 @@
         text: S.changeAnswer,
         onclick: function (e) {
           e.preventDefault();
+          if (privateEventId) {
+            // Same event, same visitor: the form opens again with the
+            // answer just given, and sending it again goes through
+            // web_event_rsvp like the first time.
+            return renderPrivateAnswerForm({ preview: preview, event: ev, guests: guests, response: data.response, isHost: false }, authCtx);
+          }
           rsvpStatus(token, authCtx && authCtx.idToken).then(function (res) {
             if (res.timedOut) return renderNetworkError(function () { renderThankYou(token, data, authCtx, preview); });
             if (res.data && (res.data.status === "ok" || res.data.status === "not_responded")) {
@@ -1086,6 +1141,347 @@
     container.appendChild(block);
   }
 
+  // ---- Plain link of a private event ---------------------------------------
+  // /event/<uuid> and /e/<code> come here only when the server says the event
+  // is private (event_link_status "no_access"). Nothing about the event is
+  // drawn, and nothing about it goes into the page's link-preview tags or
+  // title, until the server has checked the visitor's verified phone number
+  // against the guest list (web_event_access). The number itself is never
+  // sent from here: the visitor's Firebase token carries it.
+  //
+  // The phone and code steps are the invitation page's own (renderPhoneStep).
+  // Answers go to web_event_rsvp, which only ever updates a number that is
+  // already on the list; it never adds anyone.
+
+  function setLoadingHeader() {
+    headerTitle.classList.add("skeleton");
+    headerMeta.classList.add("skeleton");
+    headerMeta.classList.remove("hidden");
+    headerTitle.textContent = "Loading event...";
+    headerMeta.textContent = "\u00a0";
+  }
+
+  function initPrivate(rootNode, eventId) {
+    privateEventId = eventId;
+    initDom(rootNode);
+    setSmartBannerTarget(location.href);
+
+    if (headerPlatformNote) {
+      headerPlatformNote.textContent = S.platformNote;
+      headerPlatformNote.classList.toggle("hidden", isIOS());
+    }
+    headerCover.src = COVER_PLACEHOLDER;
+    headerCover.alt = "";
+    clear(contentEl);
+    setLoadingHeader();
+
+    // A visitor who verified earlier on this device skips the phone step.
+    currentFirebaseUser().then(function (user) {
+      if (!user) return showPrivateGate();
+      getIdToken().then(function (idToken) {
+        if (!idToken) return showPrivateGate();
+        privateAccess(idToken, fmtPhoneDisplay(user.phoneNumber || ""));
+      });
+    });
+  }
+
+  // Screen A: a title and one sentence, then the phone step.
+  function showPrivateGate(notice) {
+    setGenericHeader(S.privateTitle, S.privateBody);
+    renderPhoneStep("ev-" + privateEventId, null, function (e164) {
+      getIdToken().then(function (idToken) {
+        privateAccess(idToken, fmtPhoneDisplay(e164));
+      });
+    }, { heading: "", hideSub: true, notice: notice || null, key: "ev-" + privateEventId });
+  }
+
+  function privateAccess(idToken, phoneDisplay) {
+    var authCtx = { idToken: idToken, phoneDisplay: phoneDisplay };
+    clear(contentEl);
+    setLoadingHeader();
+    authedRpc("web_event_access", { p_event_id: privateEventId }, idToken).then(function (res) {
+      if (res.timedOut) {
+        setGenericHeader(S.privateTitle, "");
+        return renderNetworkError(function () { privateAccess(idToken, phoneDisplay); });
+      }
+      handlePrivateAccess(res.data, authCtx);
+    });
+  }
+
+  function handlePrivateAccess(data, authCtx) {
+    switch (data && data.status) {
+      case "ok":
+        return renderPrivateEvent(data, authCtx);
+      case "not_invited":
+        return renderNotInvited(authCtx);
+      case "past":
+        setGenericHeader(S.privateTitle, "");
+        return renderSimpleMessage(S.past);
+      case "cancelled":
+      case "not_found":
+      case "public":
+        return renderUnavailable();
+      case "phone_required":
+        return showPrivateGate();
+      case "bad_request":
+        return showPrivateGate(S.somethingWrong);
+      case "rate_limited":
+        setGenericHeader(S.privateTitle, "");
+        return renderSimpleMessage(S.tooManyTries);
+      default:
+        // A word the server may add later.
+        setGenericHeader(S.privateTitle, "");
+        return renderSimpleMessage(S.somethingWrong);
+    }
+  }
+
+  // Today's words for an event that is not there (also for one that was
+  // cancelled): no title, no date, nothing else.
+  function renderUnavailable() {
+    setGenericHeader(S.unavailableTitle, S.unavailableBody);
+    clear(contentEl);
+  }
+
+  // A verified number that is not on the list. Never says why, and never
+  // offers to join: that stays the invite link's job.
+  function renderNotInvited(authCtx) {
+    setGenericHeader(S.privateTitle, "");
+    clear(contentEl);
+    var children = [el("p", { class: "meta", text: S.notInvited })];
+    var verified = verifiedLine(null, authCtx);
+    if (verified) children.push(verified);
+    contentEl.appendChild(card(children));
+  }
+
+  // The answer of web_event_access, shaped like what the invitation page
+  // draws. Missing keys are fine: the event block fills what the preview
+  // does not carry.
+  function privateView(data) {
+    var ev = data.event || {};
+    var pv = data.preview || {};
+    var plus = pv.plus_ones_allowed != null ? pv.plus_ones_allowed : ev.plus_ones_allowed;
+    return {
+      preview: {
+        event_id: pv.event_id || ev.id,
+        title: pv.title || ev.title,
+        date_start: pv.date_start || ev.date_start,
+        date_end: pv.date_end || ev.date_end,
+        cover_url: pv.cover_url || ev.cover_url,
+        image_url: pv.image_url,
+        host_name: pv.host_name || ev.host_name,
+        area: pv.area || ev.area,
+        plus_ones_allowed: plus || 0,
+        guest_list_visible: pv.guest_list_visible,
+        status: "live",
+        link_kind: "plain"
+      },
+      event: ev,
+      guests: data.guests || {},
+      response: data.response || null,
+      isHost: !!data.is_host
+    };
+  }
+
+  function renderPrivateEvent(data, authCtx) {
+    var view = privateView(data);
+    if (view.isHost) return renderPrivateHost(view, authCtx);
+    renderPrivateAnswerForm(view, authCtx);
+  }
+
+  // Address (only when the server sent it), the guest line, and the guest
+  // list for someone who is going or maybe.
+  function privateDetailsCard(view) {
+    var ev = view.event || {};
+    var guests = view.guests || {};
+    var kept = view.response === "going" || view.response === "maybe";
+    var children = [];
+
+    if (ev.location && kept) {
+      var loc = ev.location;
+      var mapsHref = "https://maps.apple.com/?q=" + encodeURIComponent(loc.address || loc.title || "") +
+        (loc.latitude && loc.longitude ? "&ll=" + loc.latitude + "," + loc.longitude : "");
+      children.push(el("div", { class: "address-card" }, [
+        el("p", { class: "address-title", text: loc.title || "" }),
+        el("p", { class: "address-line", text: loc.address || "" }),
+        el("a", { class: "btn btn-store", href: mapsHref, target: "_blank", rel: "noopener", text: S.openInMaps })
+      ]));
+    } else if (!view.isHost) {
+      children.push(el("p", { class: "meta", text: S.answerToSeeAddress }));
+    }
+
+    if (guests.visible && view.preview.guest_list_visible !== false) {
+      children.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
+      if (kept && guests.list && guests.list.length) {
+        children.push(el("div", { class: "guest-list" }, guests.list.slice(0, 30).map(function (g) {
+          var avatar = g.avatar_url
+            ? el("img", { class: "guest-avatar", src: g.avatar_url, alt: "" })
+            : el("span", { class: "guest-avatar guest-avatar-initial", text: (g.name || "?").charAt(0).toUpperCase() });
+          return el("div", { class: "guest-row" }, [avatar, el("span", { class: "guest-name", text: g.name || "" })]);
+        })));
+      }
+    }
+    return children.length ? card(children) : null;
+  }
+
+  // The host sees the event and no answer buttons.
+  function renderPrivateHost(view, authCtx) {
+    setHeader(view.preview);
+    clear(contentEl);
+    var children = [el("h2", { class: "rsvp-heading", text: S.hostLine })];
+    var verified = verifiedLine(null, authCtx);
+    if (verified) children.push(verified);
+    contentEl.appendChild(card(children));
+    var details = privateDetailsCard(view);
+    if (details) contentEl.appendChild(details);
+  }
+
+  function renderPrivateAnswerForm(view, authCtx) {
+    var pv = view.preview;
+    var ev = view.event || {};
+    setHeader(pv);
+    clear(contentEl);
+
+    var maxPlus = pv.plus_ones_allowed || 0;
+    var plusOnes = 0;
+    var nameVisible = false;
+    // The server already has a name for most visitors (the host's contact
+    // name, or the Pinfo account's name), so none is asked for up front. It
+    // appears only if the server says it needs one.
+    var nameInput = el("input", {
+      type: "text", class: "input", maxlength: "40", placeholder: S.namePlaceholder, autocomplete: "name"
+    });
+    var nameField = el("div", { class: "field hidden" }, [
+      el("label", { class: "field-label", text: S.nameLabel }),
+      nameInput
+    ]);
+    var errorEl = el("p", { class: "field-error hidden" });
+
+    function showError(text) {
+      errorEl.textContent = text;
+      errorEl.classList.remove("hidden");
+    }
+
+    function revealName() {
+      nameVisible = true;
+      nameField.classList.remove("hidden");
+      nameInput.focus();
+    }
+
+    var answerArea = el("div", { class: "rsvp-screen" });
+
+    function setDisabled(disabled) {
+      Array.prototype.forEach.call(answerArea.querySelectorAll("button"), function (b) { b.disabled = disabled; });
+    }
+
+    function submit(response) {
+      var typed = nameInput.value.trim();
+      if (nameVisible && !typed) {
+        showError(S.nameRequired);
+        nameInput.focus();
+        return;
+      }
+      errorEl.classList.add("hidden");
+      setDisabled(true);
+      // Guests can only come with Going; the server ignores them otherwise.
+      rsvpAnswer(null, response, typed || null, response === "going" ? plusOnes : 0, authCtx.idToken).then(function (res) {
+        setDisabled(false);
+        if (res.timedOut) return renderNetworkError(function () { renderPrivateAnswerForm(view, authCtx); });
+        handlePrivateRsvpResult(res.data, { view: view, authCtx: authCtx, showError: showError, revealName: revealName });
+      });
+    }
+
+    var goingBtn = el("button", { type: "button", class: "btn btn-answer btn-going", text: S.btnGoing });
+    var maybeBtn = el("button", { type: "button", class: "btn btn-answer btn-maybe", text: S.btnMaybe, onclick: function () { submit("maybe"); } });
+    var cantBtn = el("button", { type: "button", class: "btn btn-answer btn-cant", text: S.btnCant, onclick: function () { submit("cant"); } });
+    var buttonsRow = el("div", { class: "answer-row" }, [goingBtn, maybeBtn, cantBtn]);
+    var selectedBtn = { going: goingBtn, maybe: maybeBtn, cant: cantBtn }[view.response];
+    if (selectedBtn) selectedBtn.classList.add("selected");
+
+    // The +1 / +2 / +3 step belongs to Going only: it opens after tapping
+    // Going, so it can never be filled in and then lost on Maybe.
+    function showButtons() {
+      plusOnes = 0;
+      clear(answerArea);
+      answerArea.appendChild(buttonsRow);
+    }
+    function showPlusStep() {
+      clear(answerArea);
+      answerArea.appendChild(plusOnesControl(maxPlus, function (v) { plusOnes = v; }));
+      answerArea.appendChild(el("button", { type: "button", class: "btn btn-primary", text: S.btnGoing, onclick: function () { submit("going"); } }));
+      answerArea.appendChild(el("a", {
+        href: "#", class: "change-answer-link", text: S.back,
+        onclick: function (e) { e.preventDefault(); showButtons(); }
+      }));
+    }
+    goingBtn.addEventListener("click", function () {
+      if (maxPlus > 0) showPlusStep(); else submit("going");
+    });
+    answerArea.appendChild(buttonsRow);
+
+    var children = [];
+    if (pv.host_name) children.push(el("h2", { class: "rsvp-heading", text: S.groupGreeting(pv.host_name) }));
+    var verified = verifiedLine(null, authCtx);
+    if (verified) children.push(verified);
+    if (view.response) {
+      children.push(el("p", { class: "already-said", text: S.alreadySaid[view.response] || "" }));
+      children.push(el("p", { class: "hint-left", text: S.changeAnytime }));
+    } else {
+      children.push(el("p", { class: "meta", text: S.chooseAnswer }));
+    }
+    children.push(nameField);
+    children.push(errorEl);
+    children.push(answerArea);
+    children.push(el("p", { class: "privacy-line", text: S.ageConfirm }));
+    children.push(privacyGroupLine());
+    contentEl.appendChild(card(children));
+
+    var details = privateDetailsCard(view);
+    if (details) contentEl.appendChild(details);
+
+    // Calendar and Get Pinfo only once there is an answer: RSVP first,
+    // install second, as on the invitation page.
+    if (view.response === "going" || view.response === "maybe") {
+      if (isAndroid()) appendKeepLinkBlock(contentEl, { event: ev, preview: pv });
+      appendInstallBlock(contentEl, { response: view.response, event: ev, preview: pv, authCtx: authCtx, token: null, eventId: ev.id });
+      if (!isAndroid()) appendKeepLinkBlock(contentEl, { event: ev, preview: pv });
+    } else if (view.response === "cant") {
+      appendInstallBlock(contentEl, { response: "cant", event: ev, preview: pv, authCtx: authCtx, token: null, eventId: ev.id });
+    }
+  }
+
+  function handlePrivateRsvpResult(data, ctx) {
+    var authCtx = ctx.authCtx;
+    switch (data && data.status) {
+      case "ok":
+        return renderThankYou(null, data, authCtx, ctx.view.preview);
+      case "not_invited":
+        return renderNotInvited(authCtx);
+      case "host":
+        ctx.view.isHost = true;
+        return renderPrivateHost(ctx.view, authCtx);
+      case "cancelled":
+      case "not_found":
+      case "public":
+        return renderUnavailable();
+      case "past":
+        setGenericHeader(S.privateTitle, "");
+        return renderSimpleMessage(S.past);
+      case "name_required":
+        ctx.revealName();
+        return ctx.showError(S.nameRequired);
+      case "name_not_allowed":
+        ctx.revealName();
+        return ctx.showError(S.nameNotAllowed);
+      case "phone_required":
+        return showPrivateGate();
+      case "rate_limited":
+        setGenericHeader(S.privateTitle, "");
+        return renderSimpleMessage(S.tooManyTries);
+      default:
+        return ctx.showError(S.somethingWrong);
+    }
+  }
+
   // ---- Orchestration -----------------------------------------------------
   function setSmartBannerTarget(appArgumentUrl) {
     var banner = document.getElementById("smart-banner");
@@ -1175,5 +1571,5 @@
     });
   }
 
-  window.PinfoRsvp = { init: init };
+  window.PinfoRsvp = { init: init, initPrivate: initPrivate };
 })();

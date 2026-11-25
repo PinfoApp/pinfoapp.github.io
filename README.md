@@ -83,6 +83,19 @@ invite before the person taps it. `event/index.html`/`404.html`:
 - Read the token once client-side purely to build that link; it is never
   sent to Supabase or logged anywhere by this site.
 
+## Plain link of a private event
+
+`/event/<uuid>` and `/e/<code>` first ask the server whether the event is
+public (`event_link_status`, anonymous, sent next to the usual event read).
+Public events carry on as before. Only the answer "no_access" (a private
+event) starts the phone check: `assets/rsvp.js` (loaded only then) shows a
+private-event notice and the same phone and code steps as the invitation page,
+then asks the server with the visitor's Firebase token (`web_event_access`).
+The event is drawn only for a number on the guest list; any other number is
+told it is not on the list. Answers go to `web_event_rsvp`. The page never
+sends a phone number itself and puts nothing about the event into its
+link-preview tags or title. Links with `?t=` are not affected.
+
 ## SEO / link previews
 
 - `index.html`'s `<head>` carries a meta description, canonical URL, Open Graph
