@@ -26,6 +26,16 @@
 (function () {
   "use strict";
 
+  // The page loads this file as rsvp.js?v=<release>; the phone module is
+  // then loaded with the same version, so a page can never pair with an old
+  // cached copy of either file.
+  var ASSET_V = (function () {
+    try {
+      var m = /[?&]v=([A-Za-z0-9._-]+)/.exec(document.currentScript && document.currentScript.src || "");
+      return m ? m[1] : "";
+    } catch (e) { return ""; }
+  })();
+
   var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
   var SUPABASE_KEY = "sb_publishable_ESy4TzFh9kWTef57Bfoufg_D3ZSvKEv";
   var APPSTORE_URL = "https://apps.apple.com/app/id6463236759";
@@ -143,7 +153,8 @@
       somethingWrong: "Something went wrong. Try again in a moment.",
       hostLine: "You are the host of this event.",
       back: "Back",
-      answerToSeeAddress: "Answer to see the address."
+      answerToSeeAddress: "Answer to see the address.",
+      alreadySaidPlus: function (n) { return "You said Going +" + n + ". Change?"; }
     },
     de: {
       invalid: "Dieser Einladungslink ist nicht mehr gültig.",
@@ -232,7 +243,8 @@
       somethingWrong: "Etwas ist schiefgelaufen. Versuche es gleich noch einmal.",
       hostLine: "Du bist der Gastgeber dieses Events.",
       back: "Zurück",
-      answerToSeeAddress: "Antworte, um die Adresse zu sehen."
+      answerToSeeAddress: "Antworte, um die Adresse zu sehen.",
+      alreadySaidPlus: function (n) { return "Du hast Dabei +" + n + " gesagt. Ändern?"; }
     }
   };
   var S = STRINGS[LOCALE];
@@ -468,6 +480,12 @@
     }).catch(function () { return null; });
   }
 
+  // A Firebase script that never arrives must not hold the page on its
+  // loading card: after a few seconds the visitor is treated as not signed in.
+  function currentFirebaseUserSoon() {
+    return withTimeout(currentFirebaseUser(), 8000).then(function (u) { return u && u.timedOut ? null : u; });
+  }
+
   function getIdToken() {
     if (!firebaseState.auth || !firebaseState.auth.currentUser) return Promise.resolve(null);
     return firebaseState.auth.currentUser.getIdToken().catch(function () { return null; });
@@ -601,9 +619,67 @@
     contentEl.appendChild(card(children));
   }
 
-  function plusOnesControl(maxAllowed, onChange) {
+  // A finger on a button while a text field has focus: the first tap used to
+  // only close the keyboard, the page moved, and the tap was lost. The press
+  // is now taken when the finger lifts, on the button it first touched, so
+  // the keyboard closing cannot move the button out from under it. A swipe
+  // is left alone.
+  function installFirstTap(rootEl) {
+    if (!rootEl || rootEl.pinfoFirstTap) return;
+    rootEl.pinfoFirstTap = true;
+    var press = null;
+    rootEl.addEventListener("touchstart", function (e) {
+      var ae = document.activeElement;
+      var typing = !!(ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName));
+      var btn = typing && e.target && e.target.closest ? e.target.closest("button") : null;
+      var t = e.touches && e.touches[0];
+      press = btn && !btn.disabled && e.touches.length === 1 && t ? { btn: btn, x: t.clientX, y: t.clientY } : null;
+    }, { passive: true });
+    rootEl.addEventListener("touchmove", function (e) {
+      var t = e.touches && e.touches[0];
+      if (press && t && (Math.abs(t.clientX - press.x) > 10 || Math.abs(t.clientY - press.y) > 10)) press = null;
+    }, { passive: true });
+    rootEl.addEventListener("touchcancel", function () { press = null; }, { passive: true });
+    rootEl.addEventListener("touchend", function (e) {
+      var p = press;
+      press = null;
+      if (!p || !document.body.contains(p.btn)) return;
+      if (e.cancelable) e.preventDefault();
+      p.btn.click();
+    }, { passive: false });
+  }
+
+  // The guest's own plus-ones, kept for this tab. The server does not send
+  // them back with the answer, so this is what lets the page say
+  // "You said Going +1" and count them. Only a number the guest chose here.
+  function answerKey(token) {
+    return privateEventId ? "e:" + privateEventId : (token ? "i:" + token : null);
+  }
+
+  function rememberPlus(key, response, plus) {
+    if (!key) return;
+    try {
+      if (response === "going" && plus > 0) window.sessionStorage.setItem("pinfo-plus-" + key, String(plus));
+      else window.sessionStorage.removeItem("pinfo-plus-" + key);
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function recallPlus(key) {
+    if (!key) return 0;
+    try {
+      var n = parseInt(window.sessionStorage.getItem("pinfo-plus-" + key), 10);
+      return n > 0 && n <= 3 ? n : 0;
+    } catch (e) { return 0; }
+  }
+
+  function alreadySaidText(response, plus) {
+    if (response === "going" && plus > 0) return S.alreadySaidPlus(plus);
+    return S.alreadySaid[response] || "";
+  }
+
+  function plusOnesControl(maxAllowed, onChange, initial) {
     if (!maxAllowed) return null;
-    var value = 0;
+    var value = initial > 0 && initial <= maxAllowed ? initial : 0;
     var chips = el("div", { class: "chip-row" }, []);
     var buttons = [];
     function render() {
@@ -621,6 +697,7 @@
         chips.appendChild(b);
       })(i);
     }
+    render();
     return el("div", { class: "field" }, [
       el("label", { class: "field-label", text: S.plusOnesLabel }),
       chips
@@ -663,6 +740,7 @@
       rsvpAnswer(token, response, name, plusOnes, authCtx && authCtx.idToken).then(function (res) {
         setButtonsDisabled(false);
         if (res.timedOut) return renderNetworkError(function () { renderAnswerForm(token, preview, authCtx, opts); });
+        if (res.data && res.data.status === "ok") rememberPlus(answerKey(token), response, response === "going" ? plusOnes : 0);
         handleRsvpResult(token, preview, authCtx, res.data, { nameError: errorEl, formCtx: { token: token, preview: preview, authCtx: authCtx, opts: opts } });
       });
     }
@@ -707,7 +785,7 @@
     }
 
     if (opts.alreadyResponse) {
-      children.push(el("p", { class: "already-said", text: S.alreadySaid[opts.alreadyResponse] || "" }));
+      children.push(el("p", { class: "already-said", text: alreadySaidText(opts.alreadyResponse, recallPlus(answerKey(token))) }));
       children.push(el("p", { class: "hint-left", text: S.changeAnytime }));
     }
 
@@ -753,7 +831,7 @@
     if (phoneModulePromise) return phoneModulePromise;
     phoneModulePromise = new Promise(function (resolve, reject) {
       var tag = document.createElement("script");
-      tag.src = "/assets/rsvp-phone.js";
+      tag.src = "/assets/rsvp-phone.js" + (ASSET_V ? "?v=" + ASSET_V : "");
       tag.onload = function () { window.PinfoPhone ? resolve(window.PinfoPhone) : reject(new Error("phone module missing")); };
       tag.onerror = function () { reject(new Error("phone module failed")); };
       document.head.appendChild(tag);
@@ -788,7 +866,7 @@
       phone.renderPhone({
         token: opts.key || token, locale: LOCALE, S: S, heading: heading, hideSub: !!opts.hideSub, notice: opts.notice || null,
         el: el, clear: clear, card: card, privacyGroupLine: privacyGroupLine,
-        fmtPhoneDisplay: fmtPhoneDisplay, contentEl: contentEl, rootEl: root,
+        fmtPhoneDisplay: fmtPhoneDisplay, contentEl: contentEl, rootEl: root, firstTap: installFirstTap,
         sendPhoneCode: sendPhoneCode, confirmPhoneCode: confirmPhoneCode, cancelPhoneCode: cancelPhoneCode,
         onVerified: onVerified
       });
@@ -1067,8 +1145,9 @@
       ]));
     }
 
+    var ownPlus = data.response === "going" ? recallPlus(answerKey(token)) : 0;
     if (guests.visible && guests.list && guests.list.length && (data.response === "going" || data.response === "maybe")) {
-      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
+      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount((guests.going || 0) + ownPlus, guests.maybe || 0) }));
       var list = el("div", { class: "guest-list" }, guests.list.slice(0, 30).map(function (g) {
         var avatar = g.avatar_url
           ? el("img", { class: "guest-avatar", src: g.avatar_url, alt: "" })
@@ -1077,7 +1156,7 @@
       }));
       detailChildren.push(list);
     } else if (data.response === "going" || data.response === "maybe") {
-      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
+      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount((guests.going || 0) + ownPlus, guests.maybe || 0) }));
     }
 
     if (detailChildren.length) contentEl.appendChild(card(detailChildren));
@@ -1164,7 +1243,11 @@
   function initPrivate(rootNode, eventId) {
     privateEventId = eventId;
     initDom(rootNode);
-    setSmartBannerTarget(location.href);
+    installFirstTap(rootNode);
+    // The banner's Open hands the event's own link to the app (an invite
+    // token on the link stays on it).
+    var inviteT = new URLSearchParams(location.search).get("t");
+    setSmartBannerTarget("https://pinfoapp.com/event/" + eventId + (inviteT ? "?t=" + encodeURIComponent(inviteT) : ""));
 
     if (headerPlatformNote) {
       headerPlatformNote.textContent = S.platformNote;
@@ -1176,7 +1259,7 @@
     setLoadingHeader();
 
     // A visitor who verified earlier on this device skips the phone step.
-    currentFirebaseUser().then(function (user) {
+    currentFirebaseUserSoon().then(function (user) {
       if (!user) return showPrivateGate();
       getIdToken().then(function (idToken) {
         if (!idToken) return showPrivateGate();
@@ -1310,7 +1393,8 @@
     }
 
     if (guests.visible && view.preview.guest_list_visible !== false) {
-      children.push(el("p", { class: "guest-count", text: S.guestCount(guests.going || 0, guests.maybe || 0) }));
+      var ownPlus = view.response === "going" ? recallPlus(answerKey(null)) : 0;
+      children.push(el("p", { class: "guest-count", text: S.guestCount((guests.going || 0) + ownPlus, guests.maybe || 0) }));
       if (kept && guests.list && guests.list.length) {
         children.push(el("div", { class: "guest-list" }, guests.list.slice(0, 30).map(function (g) {
           var avatar = g.avatar_url
@@ -1386,6 +1470,7 @@
       rsvpAnswer(null, response, typed || null, response === "going" ? plusOnes : 0, authCtx.idToken).then(function (res) {
         setDisabled(false);
         if (res.timedOut) return renderNetworkError(function () { renderPrivateAnswerForm(view, authCtx); });
+        if (res.data && res.data.status === "ok") rememberPlus(answerKey(null), response, response === "going" ? plusOnes : 0);
         handlePrivateRsvpResult(res.data, { view: view, authCtx: authCtx, showError: showError, revealName: revealName });
       });
     }
@@ -1406,7 +1491,8 @@
     }
     function showPlusStep() {
       clear(answerArea);
-      answerArea.appendChild(plusOnesControl(maxPlus, function (v) { plusOnes = v; }));
+      plusOnes = Math.min(recallPlus(answerKey(null)), maxPlus);
+      answerArea.appendChild(plusOnesControl(maxPlus, function (v) { plusOnes = v; }, plusOnes));
       answerArea.appendChild(el("button", { type: "button", class: "btn btn-primary", text: S.btnGoing, onclick: function () { submit("going"); } }));
       answerArea.appendChild(el("a", {
         href: "#", class: "change-answer-link", text: S.back,
@@ -1423,7 +1509,7 @@
     var verified = verifiedLine(null, authCtx);
     if (verified) children.push(verified);
     if (view.response) {
-      children.push(el("p", { class: "already-said", text: S.alreadySaid[view.response] || "" }));
+      children.push(el("p", { class: "already-said", text: alreadySaidText(view.response, recallPlus(answerKey(null))) }));
       children.push(el("p", { class: "hint-left", text: S.changeAnytime }));
     } else {
       children.push(el("p", { class: "meta", text: S.chooseAnswer }));
@@ -1509,6 +1595,7 @@
 
   function init(rootNode, token) {
     initDom(rootNode);
+    installFirstTap(rootNode);
     setSmartBannerTarget(location.href);
 
     if (headerPlatformNote) {
@@ -1547,7 +1634,7 @@
       // Group link: check for a persisted Firebase sign-in first (a
       // returning visitor on the same device/browser may already be
       // verified), otherwise start with the phone step.
-      currentFirebaseUser().then(function (user) {
+      currentFirebaseUserSoon().then(function (user) {
         if (user) {
           getIdToken().then(function (idToken) {
             rsvpStatus(token, idToken).then(function (sres) {

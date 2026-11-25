@@ -356,7 +356,16 @@
     (function () {
       var banner = document.getElementById("smart-banner");
       var base = banner.getAttribute("content").split(",")[0];
-      banner.setAttribute("content", base + ", app-argument=" + location.href);
+      var arg = location.href;
+      // The app opens https://pinfoapp.com/event/<uuid>: when this URL names
+      // an event, hand over exactly that link (an invite token stays).
+      var m = location.pathname.match(/\/event\/([0-9a-fA-F-]{36})/) ||
+        (/\/event\/?$/.test(location.pathname) && (new URLSearchParams(location.search).get("id") || "").match(/^([0-9a-fA-F-]{36})$/));
+      if (m) {
+        var t = new URLSearchParams(location.search).get("t");
+        arg = "https://pinfoapp.com/event/" + m[1] + (t ? "?t=" + encodeURIComponent(t) : "");
+      }
+      banner.setAttribute("content", base + ", app-argument=" + arg);
     })();
 
     // ---- Which route is this? -------------------------------------------------
@@ -685,17 +694,7 @@
     // here. assets/rsvp.js (loaded only now) asks for a phone check first
     // and shows the event only to a number on the guest list.
     function startPrivateLink(id) {
-      document.getElementById("simple-card").classList.add("hidden");
-      var rsvpRoot = document.getElementById("rsvp-root");
-      rsvpRoot.classList.remove("hidden");
-      var script = document.createElement("script");
-      script.src = "/assets/rsvp.js";
-      script.onload = function () { window.PinfoRsvp.initPrivate(rsvpRoot, id); };
-      script.onerror = function () {
-        rsvpRoot.querySelector("#rsvp-content").textContent =
-          "Couldn't reach Pinfo. Check your connection and try again.";
-      };
-      document.head.appendChild(script);
+      runRsvp(function (api, rsvpRoot) { api.initPrivate(rsvpRoot, id); });
     }
 
     // Finishes the page for a resolved (or unresolved) event: wires up the
@@ -707,24 +706,92 @@
     // generic "not found" card - never an error, never a guessed link.
     function finish(id, token, preloadedEv) {
       if (id && token) activateInvite(id, token);
+      if (id) {
+        var banner = document.getElementById("smart-banner");
+        if (banner) {
+          banner.setAttribute("content", banner.getAttribute("content").split(",")[0] +
+            ", app-argument=https://pinfoapp.com/event/" + id + (token ? "?t=" + encodeURIComponent(token) : ""));
+        }
+      }
 
       if (preloadedEv !== undefined) {
         render(preloadedEv);
-      } else if (id && !token) {
-        // A public event carries on exactly as before. Only the server
-        // saying "no_access" (a private event) hands over to the phone
-        // check. The two requests run side by side, so a public page is
-        // no slower than it was.
+      } else if (id) {
+        // The long link (/event/<uuid>) and the short link (/e/<code>) both
+        // end up here and behave the same. A public event carries on exactly
+        // as before. Only the server saying "no_access" (a private event)
+        // hands over to the phone check. The two requests run side by side,
+        // so a public page is no slower than it was.
         var eventRequest = fetchEventById(id);
         supabaseRpc("event_link_status", { p_event_id: id }).then(function (status) {
           if (status === "no_access") startPrivateLink(id);
           else eventRequest.then(render);
         });
-      } else if (id) {
-        fetchEventById(id).then(render);
       } else {
         render(null);
       }
+    }
+
+    // ---- Loading assets/rsvp.js ------------------------------------------------
+    // The script is loaded under a version that changes with every release
+    // (ASSET_V: the first 10 characters of the SHA-1 of assets/rsvp.js and
+    // assets/rsvp-phone.js joined, in that order), so a new page can never
+    // pair with an old cached copy of the script. If the script is missing,
+    // or the function this page needs is not there, the page reloads once,
+    // fetching the script fresh, and then says so instead of staying on the
+    // grey loading card.
+    var ASSET_V = "5616325690";
+    var RELOAD_KEY = "pinfo-rsvp-reloaded";
+
+    function rsvpFailed(rsvpRoot) {
+      var tried = false;
+      try { tried = sessionStorage.getItem(RELOAD_KEY) === "1"; } catch (e) { tried = true; }
+      if (!tried) {
+        try { sessionStorage.setItem(RELOAD_KEY, "1"); location.reload(); return; } catch (e) { /* fall through */ }
+      }
+      try { sessionStorage.removeItem(RELOAD_KEY); } catch (e) { /* ignore */ }
+      var de = (navigator.language || "").toLowerCase().indexOf("de") === 0;
+      var title = rsvpRoot.querySelector("#rsvp-title");
+      var meta = rsvpRoot.querySelector("#rsvp-meta");
+      var content = rsvpRoot.querySelector("#rsvp-content");
+      title.classList.add("hidden");
+      meta.classList.add("hidden");
+      var cover = rsvpRoot.querySelector("#rsvp-cover");
+      if (cover) cover.classList.add("hidden");
+      content.textContent = "";
+      var line = document.createElement("p");
+      line.className = "meta";
+      line.textContent = de ? "Etwas ist schiefgelaufen. Lade die Seite neu." : "Something went wrong. Reload the page.";
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn btn-primary";
+      button.textContent = de ? "Neu laden" : "Reload";
+      button.addEventListener("click", function () { location.reload(); });
+      content.appendChild(line);
+      content.appendChild(button);
+    }
+
+    // start(PinfoRsvp, rsvpRoot) calls the function this page needs.
+    function runRsvp(start) {
+      document.getElementById("simple-card").classList.add("hidden");
+      var rsvpRoot = document.getElementById("rsvp-root");
+      rsvpRoot.classList.remove("hidden");
+      var retry = false;
+      try { retry = sessionStorage.getItem(RELOAD_KEY) === "1"; } catch (e) { /* ignore */ }
+      var script = document.createElement("script");
+      // On the retry the address is new again, so no cached copy can answer.
+      script.src = "/assets/rsvp.js?v=" + ASSET_V + (retry ? "&r=" + Date.now() : "");
+      script.onload = function () {
+        try {
+          start(window.PinfoRsvp, rsvpRoot);
+        } catch (e) {
+          rsvpFailed(rsvpRoot);
+          return;
+        }
+        try { sessionStorage.removeItem(RELOAD_KEY); } catch (e) { /* ignore */ }
+      };
+      script.onerror = function () { rsvpFailed(rsvpRoot); };
+      document.head.appendChild(script);
     }
 
     var route = parseRoute();
@@ -741,17 +808,7 @@
       // from the simple card to the RSVP container and hand off to
       // assets/rsvp.js, loaded only for this route so /event/ and /e/
       // visitors never pay for it.
-      document.getElementById("simple-card").classList.add("hidden");
-      var rsvpRoot = document.getElementById("rsvp-root");
-      rsvpRoot.classList.remove("hidden");
-      var script = document.createElement("script");
-      script.src = "/assets/rsvp.js";
-      script.onload = function () { window.PinfoRsvp.init(rsvpRoot, route.token); };
-      script.onerror = function () {
-        rsvpRoot.querySelector("#rsvp-content").textContent =
-          "Couldn't reach Pinfo. Check your connection and try again.";
-      };
-      document.head.appendChild(script);
+      runRsvp(function (api, rsvpRoot) { api.init(rsvpRoot, route.token); });
     } else {
       var path = location.pathname.replace(/\/+$/, "") || "/";
       if (path === "/impressum") {
