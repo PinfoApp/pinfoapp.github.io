@@ -133,7 +133,10 @@
     }
     .chip-active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
     .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .btn-answer { flex: 1 1 0; min-width: 90px; margin-top: 0; }
+    /* One line each, same height: no narrower than the label, a little less
+       side padding so three fit a small phone; if they ever do not fit, the
+       last one moves to its own row instead of wrapping its text. */
+    .btn-answer { flex: 1 1 0; min-width: max-content; margin-top: 0; padding-left: 10px; padding-right: 10px; white-space: nowrap; }
     .btn-going { background: #f2f0fb; color: var(--ink); }
     .btn-maybe { background: #f2f0fb; color: var(--ink); }
     .btn-cant { background: #f2f0fb; color: var(--muted); }
@@ -744,7 +747,7 @@
     // or the function this page needs is not there, the page reloads once,
     // fetching the script fresh, and then says so instead of staying on the
     // grey loading card.
-    var ASSET_V = "5616325690";
+    var ASSET_V = "da2593f7ae";
     var RELOAD_KEY = "pinfo-rsvp-reloaded";
 
     function rsvpFailed(rsvpRoot) {

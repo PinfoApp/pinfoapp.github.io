@@ -135,6 +135,14 @@
       installSubPersonal: function (host) { return "Sign in with the phone number " + host + " invited and the event is already waiting for you."; },
       installSubGroup: function (number) { return "Sign in with " + number + " and the event is already waiting for you."; },
       installSubCant: "Free on iPhone. Takes a minute to set up.",
+      installHeadingPending: function (host) { return "Get Pinfo to see when " + host + " lets you in"; },
+      installLinesPending: [
+        "Get a message the moment {host} answers",
+        "Chat with the other guests once you are in",
+        "A reminder before it starts, and the photos afterwards"
+      ],
+      installSubPending: function (number) { return number ? "Sign in with " + number + " and your request is already waiting." : "Sign in with your phone number and your request is already waiting."; },
+      hostFallback: "the host",
       openMyInvite: "I have Pinfo, open my invitation",
       qrCaption: "Scan with your iPhone camera",
       androidNote: "Pinfo is on iPhone for now. Your answer is saved either way.",
@@ -225,6 +233,14 @@
       installSubPersonal: function (host) { return "Melde dich mit der Telefonnummer an, mit der " + host + " dich eingeladen hat, und das Event wartet schon auf dich."; },
       installSubGroup: function (number) { return "Melde dich mit " + number + " an und das Event wartet schon auf dich."; },
       installSubCant: "Kostenlos für iPhone. In einer Minute eingerichtet.",
+      installHeadingPending: function (host) { return "Hol dir Pinfo, um zu sehen, wann " + host + " dich zulässt"; },
+      installLinesPending: [
+        "Bekomme eine Nachricht, sobald {host} antwortet",
+        "Chatte mit den anderen Gästen, sobald du dabei bist",
+        "Eine Erinnerung vor dem Start und die Fotos danach"
+      ],
+      installSubPending: function (number) { return number ? "Melde dich mit " + number + " an und deine Anfrage wartet schon." : "Melde dich mit deiner Telefonnummer an und deine Anfrage wartet schon."; },
+      hostFallback: "der Gastgeber",
       openMyInvite: "Ich habe Pinfo, meine Einladung öffnen",
       qrCaption: "Mit der iPhone-Kamera scannen",
       androidNote: "Pinfo gibt es vorerst nur für das iPhone. Deine Antwort ist trotzdem gespeichert.",
@@ -797,7 +813,8 @@
     }
     children.push(errorEl);
 
-    var plusCtl = plusOnesControl(preview.plus_ones_allowed || 0, function (v) { plusOnes = v; });
+    // A request to join is for the person, so there is no +1 to choose on it.
+    var plusCtl = preview.status === "full" ? null : plusOnesControl(preview.plus_ones_allowed || 0, function (v) { plusOnes = v; });
     if (plusCtl) children.push(plusCtl);
 
     if (preview.status === "full") {
@@ -893,11 +910,7 @@
         renderSimpleMessage(S.tooMany);
         break;
       case "phone_required":
-        renderPhoneStep(token, preview, function (e164) {
-          getIdToken().then(function (idToken) {
-            renderAnswerForm(token, preview, { idToken: idToken, phoneDisplay: fmtPhoneDisplay(e164) });
-          });
-        });
+        renderPhoneStep(token, preview, function (e164) { continueAfterVerification(token, preview, e164); });
         break;
       case "name_required":
         if (extra.nameError) { extra.nameError.textContent = S.nameRequired; extra.nameError.classList.remove("hidden"); }
@@ -929,6 +942,29 @@
     }
   }
 
+  // A number on a group link has just been verified (or was verified
+  // earlier on this device). Ask the server what it has for THIS number
+  // before drawing anything: a number that already answered, or that the
+  // host let in, gets its answer back instead of a fresh form. The preview
+  // loaded before the check was for a stranger, so a number with nothing yet
+  // gets a preview asked again as the verified visitor.
+  function continueAfterVerification(token, preview, e164) {
+    getIdToken().then(function (idToken) {
+      var authCtx = { idToken: idToken, phoneDisplay: fmtPhoneDisplay(e164) };
+      rsvpStatus(token, idToken).then(function (sres) {
+        if (sres.timedOut) return renderNetworkError(function () { continueAfterVerification(token, preview, e164); });
+        var data = sres.data;
+        if (!(data && data.status === "not_responded")) return handleStatusResult(token, preview, authCtx, data);
+        previewInvite(token, idToken).then(function (rows) {
+          var fresh = rows && rows[0] ? rows[0] : preview;
+          if (fresh.status === "cancelled") return renderSimpleMessage(S.cancelled);
+          if (fresh.status === "past") return renderSimpleMessage(S.past);
+          renderAnswerForm(token, fresh, authCtx);
+        });
+      });
+    });
+  }
+
   function renderPendingScreen(token, preview, authCtx) {
     clear(contentEl);
     var checkBtn = el("button", {
@@ -945,7 +981,8 @@
       checkBtn
     ]);
     contentEl.appendChild(screen);
-    appendInstallBlock(contentEl, { response: "maybe", preview: preview, authCtx: authCtx, token: token });
+    // Someone waiting to be let in is not "still deciding": the pitch says so.
+    appendInstallBlock(contentEl, { response: "pending", preview: preview, authCtx: authCtx, token: token });
   }
 
   function handleStatusResult(token, preview, authCtx, data) {
@@ -955,11 +992,7 @@
     if (status === "declined") return renderSimpleMessage(S.declinedText(preview.host_name || ""));
     if (status === "not_responded") return renderAnswerForm(token, preview, authCtx);
     if (status === "phone_required") {
-      return renderPhoneStep(token, preview, function (e164) {
-        getIdToken().then(function (idToken) {
-          renderAnswerForm(token, preview, { idToken: idToken, phoneDisplay: fmtPhoneDisplay(e164) });
-        });
-      });
+      return renderPhoneStep(token, preview, function (e164) { continueAfterVerification(token, preview, e164); });
     }
     if (status === "rate_limited") {
       var mins = Math.ceil((data.retry_after_s || 60) / 60);
@@ -1179,7 +1212,12 @@
     var isPersonal = ctx.preview ? ctx.preview.link_kind === "personal" : !(ctx.authCtx && ctx.authCtx.phoneDisplay);
 
     var headingTemplate, lines, subText;
-    if (response === "going") {
+    if (response === "pending") {
+      host = host || S.hostFallback;
+      headingTemplate = S.installHeadingPending(host);
+      lines = S.installLinesPending;
+      subText = S.installSubPending((ctx.authCtx && ctx.authCtx.phoneDisplay) || "");
+    } else if (response === "going") {
       headingTemplate = S.installHeadingGoing;
       lines = S.installLinesGoing;
       subText = isPersonal ? S.installSubPersonal(host) : S.installSubGroup((ctx.authCtx && ctx.authCtx.phoneDisplay) || "");
@@ -1636,23 +1674,9 @@
       // verified), otherwise start with the phone step.
       currentFirebaseUserSoon().then(function (user) {
         if (user) {
-          getIdToken().then(function (idToken) {
-            rsvpStatus(token, idToken).then(function (sres) {
-              if (sres.timedOut) return renderNetworkError(function () { init(rootNode, token); });
-              var d = sres.data;
-              if (d && d.status === "not_responded") {
-                renderAnswerForm(token, preview, { idToken: idToken, phoneDisplay: fmtPhoneDisplay(user.phoneNumber || "") });
-              } else {
-                handleStatusResult(token, preview, { idToken: idToken, phoneDisplay: fmtPhoneDisplay(user.phoneNumber || "") }, d);
-              }
-            });
-          });
+          continueAfterVerification(token, preview, user.phoneNumber || "");
         } else {
-          renderPhoneStep(token, preview, function (e164) {
-            getIdToken().then(function (idToken) {
-              renderAnswerForm(token, preview, { idToken: idToken, phoneDisplay: fmtPhoneDisplay(e164) });
-            });
-          });
+          renderPhoneStep(token, preview, function (e164) { continueAfterVerification(token, preview, e164); });
         }
       });
     });
