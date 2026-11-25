@@ -691,13 +691,16 @@
       send(r.e164);
     });
 
-    var children = [
-      ctx.el("h2", { class: "rsvp-heading", text: ctx.heading }),
-      ctx.el("p", { class: "meta", text: S.groupSub }),
-      // The privacy policy link sits above the phone number field.
-      ctx.privacyGroupLine()
-    ];
+    // The page that calls this may have no greeting (a private link shows
+    // its own title above) and may add a sentence of its own.
+    var children = [];
+    if (ctx.heading) children.push(ctx.el("h2", { class: "rsvp-heading", text: ctx.heading }));
+    if (!ctx.hideSub) children.push(ctx.el("p", { class: "meta", text: S.groupSub }));
+    // The privacy policy link sits above the phone number field.
+    children.push(ctx.privacyGroupLine());
+    if (ctx.notice) children.push(ctx.el("p", { class: "pp-note", role: "status", text: ctx.notice }));
     if (hint) children.push(ctx.el("p", { class: "pp-note", role: "status", text: hint }));
+    ctx.notice = null;
     children.push(form);
     ctx.contentEl.appendChild(ctx.card(children));
 
@@ -842,12 +845,12 @@
       renderPhone(ctx);
     });
 
-    ctx.contentEl.appendChild(ctx.card([
-      ctx.el("h2", { class: "rsvp-heading", text: ctx.heading }),
-      ctx.el("p", { class: "pp-sent", text: T.codeSentTo(display) }),
-      ctx.el("p", { class: "meta", text: S.codeLabel }),
-      form
-    ]));
+    var codeChildren = [];
+    if (ctx.heading) codeChildren.push(ctx.el("h2", { class: "rsvp-heading", text: ctx.heading }));
+    codeChildren.push(ctx.el("p", { class: "pp-sent", text: T.codeSentTo(display) }));
+    codeChildren.push(ctx.el("p", { class: "meta", text: S.codeLabel }));
+    codeChildren.push(form);
+    ctx.contentEl.appendChild(ctx.card(codeChildren));
 
     startCountdown();
     watchKeyboard(form, codeInput, verifyBtn);
