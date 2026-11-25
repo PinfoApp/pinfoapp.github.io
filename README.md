@@ -96,6 +96,17 @@ told it is not on the list. Answers go to `web_event_rsvp`. The page never
 sends a phone number itself and puts nothing about the event into its
 link-preview tags or title. Links with `?t=` are not affected.
 
+## Script versions
+
+The event pages (`event/index.html`, `404.html`, `e/srbqd2rd/index.html`) load
+`assets/rsvp.js` as `rsvp.js?v=<ASSET_V>`, and that file loads
+`assets/rsvp-phone.js` with the same version, so an updated page can never pair
+with an old cached script. Whenever either file changes, set `ASSET_V` in all
+three pages to the first 10 characters of
+`cat assets/rsvp.js assets/rsvp-phone.js | sha1sum`. If a script is missing or
+fails to start, the page reloads once and then shows a short line with a Reload
+button instead of staying on the loading card.
+
 ## SEO / link previews
 
 - `index.html`'s `<head>` carries a meta description, canonical URL, Open Graph

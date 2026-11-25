@@ -218,7 +218,63 @@
     try { return String.fromCodePoint(127397 + iso.charCodeAt(0), 127397 + iso.charCodeAt(1)); } catch (e) { return ""; }
   }
 
-  function likelyIso() {
+  // Time zone to country, for the zones people mostly have. Anything else is
+  // looked up from the browser's own zone data (below), and failing that the
+  // language region decides.
+  var ZONE_TABLE = (
+    "Europe/Amsterdam=NL Europe/Andorra=AD Europe/Athens=GR Europe/Belgrade=RS Europe/Berlin=DE Europe/Bratislava=SK " +
+    "Europe/Brussels=BE Europe/Bucharest=RO Europe/Budapest=HU Europe/Busingen=DE Europe/Chisinau=MD Europe/Copenhagen=DK " +
+    "Europe/Dublin=IE Europe/Gibraltar=GI Europe/Guernsey=GG Europe/Helsinki=FI Europe/Isle_of_Man=IM Europe/Istanbul=TR " +
+    "Europe/Jersey=JE Europe/Kaliningrad=RU Europe/Kiev=UA Europe/Kyiv=UA Europe/Lisbon=PT Europe/Ljubljana=SI Europe/London=GB " +
+    "Europe/Luxembourg=LU Europe/Madrid=ES Europe/Malta=MT Europe/Mariehamn=AX Europe/Minsk=BY Europe/Monaco=MC Europe/Moscow=RU " +
+    "Europe/Nicosia=CY Europe/Oslo=NO Europe/Paris=FR Europe/Podgorica=ME Europe/Prague=CZ Europe/Riga=LV Europe/Rome=IT " +
+    "Europe/Samara=RU Europe/San_Marino=SM Europe/Sarajevo=BA Europe/Skopje=MK Europe/Sofia=BG Europe/Stockholm=SE " +
+    "Europe/Tallinn=EE Europe/Tirane=AL Europe/Vaduz=LI Europe/Vatican=VA Europe/Vienna=AT Europe/Vilnius=LT Europe/Volgograd=RU " +
+    "Europe/Warsaw=PL Europe/Zagreb=HR Europe/Zurich=CH Atlantic/Canary=ES Atlantic/Madeira=PT Atlantic/Azores=PT " +
+    "Atlantic/Reykjavik=IS Atlantic/Faroe=FO Arctic/Longyearbyen=SJ " +
+    "America/New_York=US America/Chicago=US America/Denver=US America/Los_Angeles=US America/Phoenix=US America/Anchorage=US " +
+    "America/Detroit=US America/Boise=US America/Indiana/Indianapolis=US America/Kentucky/Louisville=US Pacific/Honolulu=US " +
+    "America/Toronto=CA America/Vancouver=CA America/Edmonton=CA America/Winnipeg=CA America/Halifax=CA America/St_Johns=CA " +
+    "America/Regina=CA America/Montreal=CA America/Mexico_City=MX America/Cancun=MX America/Tijuana=MX America/Monterrey=MX " +
+    "America/Sao_Paulo=BR America/Argentina/Buenos_Aires=AR America/Buenos_Aires=AR America/Bogota=CO America/Lima=PE " +
+    "America/Santiago=CL America/Caracas=VE America/Havana=CU America/Panama=PA America/Puerto_Rico=PR America/Jamaica=JM " +
+    "Asia/Tokyo=JP Asia/Seoul=KR Asia/Shanghai=CN Asia/Hong_Kong=HK Asia/Singapore=SG Asia/Bangkok=TH Asia/Jakarta=ID " +
+    "Asia/Manila=PH Asia/Kolkata=IN Asia/Calcutta=IN Asia/Dubai=AE Asia/Riyadh=SA Asia/Tehran=IR Asia/Jerusalem=IL " +
+    "Asia/Tel_Aviv=IL Asia/Karachi=PK Asia/Dhaka=BD Asia/Kathmandu=NP Asia/Colombo=LK Asia/Ho_Chi_Minh=VN Asia/Saigon=VN " +
+    "Asia/Kuala_Lumpur=MY Asia/Taipei=TW Asia/Almaty=KZ Asia/Tashkent=UZ Asia/Baku=AZ Asia/Tbilisi=GE Asia/Yerevan=AM " +
+    "Asia/Beirut=LB Asia/Amman=JO Asia/Baghdad=IQ Asia/Kuwait=KW Asia/Qatar=QA Asia/Bahrain=BH Asia/Muscat=OM " +
+    "Australia/Sydney=AU Australia/Melbourne=AU Australia/Brisbane=AU Australia/Perth=AU Australia/Adelaide=AU " +
+    "Australia/Darwin=AU Australia/Hobart=AU Pacific/Auckland=NZ Africa/Cairo=EG Africa/Johannesburg=ZA Africa/Lagos=NG " +
+    "Africa/Nairobi=KE Africa/Casablanca=MA Africa/Algiers=DZ Africa/Tunis=TN Africa/Accra=GH Africa/Addis_Ababa=ET"
+  ).split(" ").reduce(function (m, pair) { var i = pair.lastIndexOf("="); m[pair.slice(0, i)] = pair.slice(i + 1); return m; }, {});
+
+  var zoneIndex = null;
+
+  function isoFromZoneData(tz) {
+    if (typeof Intl.Locale !== "function") return null;
+    if (!zoneIndex) {
+      zoneIndex = {};
+      Object.keys(BY_ISO).forEach(function (iso) {
+        try {
+          var loc = new Intl.Locale("und-" + iso);
+          var zones = typeof loc.getTimeZones === "function" ? loc.getTimeZones() : loc.timeZones;
+          (zones || []).forEach(function (z) { if (!zoneIndex[z]) zoneIndex[z] = iso; });
+        } catch (e) { /* no zone data for this region */ }
+      });
+    }
+    return zoneIndex[tz] || null;
+  }
+
+  // Where the phone is: its time zone says more than the language it is set to.
+  function isoFromTimeZone() {
+    var tz = "";
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { return null; }
+    if (!tz) return null;
+    var iso = ZONE_TABLE[tz] || isoFromZoneData(tz);
+    return iso && BY_ISO[iso] ? iso : null;
+  }
+
+  function isoFromLanguage() {
     var langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ""];
     for (var i = 0; i < langs.length; i++) {
       var parts = String(langs[i]).split(/[-_]/);
@@ -226,7 +282,13 @@
         if (/^[A-Za-z]{2}$/.test(parts[j]) && BY_ISO[parts[j].toUpperCase()]) return parts[j].toUpperCase();
       }
     }
-    return "DE";
+    return null;
+  }
+
+  // The preselected country: the time zone first, the region of the browser
+  // language as the fallback, else Germany. The person can always change it.
+  function likelyIso() {
+    return isoFromTimeZone() || isoFromLanguage() || "DE";
   }
 
   function fold(s) {
@@ -383,6 +445,12 @@
     ".pp-empty{padding:24px 16px;color:var(--muted);text-align:center}",
     "html.pp-lock,html.pp-lock body{overflow:hidden}",
     "html.pp-kb #rsvp-root.pp-active .body{padding-bottom:calc(26px + var(--pp-kb,0px) + 72px)}",
+    "html.pp-tight #rsvp-root .cover,html.pp-tight #rsvp-root .brand,html.pp-tight #rsvp-root #rsvp-platform-note,html.pp-tight #rsvp-root #rsvp-title,html.pp-tight #rsvp-root #rsvp-meta,html.pp-tight #rsvp-root .rsvp-screen>.meta{display:none!important}",
+    "html.pp-tight #rsvp-root .body{padding-top:10px}",
+    "html.pp-tight #rsvp-root .rsvp-screen{gap:8px}",
+    "html.pp-tight #rsvp-root .pp-form{gap:6px}",
+    "html.pp-tight #rsvp-root .input{padding-top:8px;padding-bottom:8px}",
+    "html.pp-tight #rsvp-root .btn{padding-top:10px;padding-bottom:10px;margin-top:4px}",
     "@media (max-height:760px) and (orientation:portrait){#rsvp-root.pp-active .cover{aspect-ratio:16/6}}",
     "@media (max-height:700px) and (orientation:portrait){#rsvp-root.pp-active .cover{aspect-ratio:16/5}}",
     "@media (orientation:landscape) and (max-height:520px){#rsvp-root.pp-active .cover{display:none}#rsvp-root.pp-active .body{padding-top:14px}}"
@@ -396,45 +464,61 @@
     document.head.appendChild(st);
   }
 
-  // ---- Keyboard: keep the field and its button in view ------------------------
+  // ---- Keyboard: keep the field, its error line and its button in view --------
   // iOS Safari keeps the layout viewport when the keyboard opens, so the
   // space the keyboard takes is added below the card (--pp-kb) and the
-  // page can then scroll the button above the keyboard and Safari's bar.
+  // page can then scroll the field above the keyboard and Safari's bar.
+  // On a short screen (landscape) the page also drops everything above the
+  // form while a field has focus (pp-tight), so field and button fit.
   var keyboardWatch = false;
 
   function updateKeyboard() {
     var vv = window.visualViewport;
     var kb = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+    var visible = vv ? vv.height : window.innerHeight;
+    var ae = document.activeElement;
+    var typing = !!(ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && ae.closest && ae.closest("#rsvp-root"));
     var root = document.documentElement;
     root.style.setProperty("--pp-kb", kb + "px");
     root.classList.toggle("pp-kb", kb > 80);
+    root.classList.toggle("pp-tight", typing && visible < 330);
   }
 
-  function ensureVisible(inputEl, buttonEl) {
+  // Scrolls so the field and the error line under it sit above the keyboard's
+  // own bar and Safari's pill, and the button too when there is room. The
+  // field wins when they do not all fit.
+  function ensureVisible(inputEl, buttonEl, errorEl) {
     if (!inputEl || !inputEl.getBoundingClientRect || !document.body.contains(inputEl)) return;
     var vv = window.visualViewport;
     var top = vv ? vv.offsetTop : 0;
     var bottom = top + (vv ? vv.height : window.innerHeight);
     var coarse = window.matchMedia && window.matchMedia("(pointer:coarse)").matches;
-    // Room under the button for Safari's floating bar and the keyboard's own bar.
-    var below = coarse ? 64 : 16;
-    var target = buttonEl && buttonEl.getBoundingClientRect ? buttonEl.getBoundingClientRect() : inputEl.getBoundingClientRect();
+    var tight = document.documentElement.classList.contains("pp-tight");
+    var below = tight ? 28 : (coarse ? 96 : 16);
     var field = inputEl.getBoundingClientRect();
-    var dy = 0;
-    if (target.bottom > bottom - below) dy = target.bottom - (bottom - below);
-    // The field itself always wins when both do not fit (landscape).
-    if (field.top - dy < top + 12) dy = field.top - (top + 12);
+    var limit = bottom - below;
+    var need = 0;
+    if (buttonEl && buttonEl.getBoundingClientRect) need = Math.max(need, buttonEl.getBoundingClientRect().bottom - limit);
+    if (errorEl && errorEl.getBoundingClientRect && !errorEl.classList.contains("hidden")) need = Math.max(need, errorEl.getBoundingClientRect().bottom - limit);
+    var most = field.top - (top + 12);
+    var dy = Math.min(need, most);
+    if (field.top >= top + 12 && dy < 0) dy = 0;
     if (Math.abs(dy) > 2) window.scrollBy(0, dy);
   }
 
-  function watchKeyboard(form, inputEl, buttonEl) {
+  // Returns a function that checks the position again (after an error line
+  // appears, for example).
+  function watchKeyboard(form, inputEl, buttonEl, errorEl) {
     var timer = null;
-    function run() { clearTimeout(timer); timer = setTimeout(function () { updateKeyboard(); ensureVisible(inputEl, buttonEl); }, 250); }
+    function run() { clearTimeout(timer); timer = setTimeout(function () { updateKeyboard(); ensureVisible(inputEl, buttonEl, errorEl); }, 250); }
     inputEl.addEventListener("focus", run);
+    inputEl.addEventListener("input", function () { if (document.activeElement === inputEl) run(); });
     if (window.visualViewport && !keyboardWatch) {
       keyboardWatch = true;
       window.visualViewport.addEventListener("resize", updateKeyboard);
       window.visualViewport.addEventListener("scroll", updateKeyboard);
+      document.addEventListener("focusin", updateKeyboard);
+      document.addEventListener("focusout", function () { setTimeout(updateKeyboard, 50); });
     }
     if (window.visualViewport) {
       var handler = function () {
@@ -444,15 +528,13 @@
       window.visualViewport.addEventListener("resize", handler);
     }
     window.addEventListener("orientationchange", run);
-    // Keep the keyboard open while the button is pressed, so the page does
-    // not move under the finger before the tap lands (the first tap used to
-    // only lower the keyboard). The tap itself still goes through.
+    // With a mouse, pressing the button keeps the focus in the field. A
+    // finger is handled in rsvp.js (the press is taken on touch end, so the
+    // keyboard closing cannot move the button out from under it).
     buttonEl.addEventListener("mousedown", function (e) {
       if (document.activeElement === inputEl) e.preventDefault();
     });
-    buttonEl.addEventListener("pointerdown", function (e) {
-      if (e.pointerType !== "mouse" && document.activeElement === inputEl) e.preventDefault();
-    });
+    return function () { if (document.activeElement === inputEl) run(); };
   }
 
   function setActive(ctx, on) {
@@ -514,6 +596,7 @@
 
     search.addEventListener("input", function () { render(search.value); });
     closeBtn.addEventListener("click", close);
+    if (ctx.firstTap) ctx.firstTap(overlay);
     document.addEventListener("keydown", onKey, true);
     document.documentElement.classList.add("pp-lock");
     document.body.appendChild(overlay);
@@ -587,10 +670,13 @@
 
     function persist(step) { saveStored(ctx.token, { raw: mem.raw, iso: mem.iso, step: step || "phone" }); }
 
+    var keepVisible = function () {};
+
     function showError(text) {
       errorEl.textContent = text;
       errorEl.classList.toggle("hidden", !text);
       numberInput.setAttribute("aria-invalid", text ? "true" : "false");
+      if (text) keepVisible();
     }
 
     function paintPreview() {
@@ -706,7 +792,7 @@
 
     paintCountry();
     paintPreview();
-    watchKeyboard(form, numberInput, sendBtn);
+    keepVisible = watchKeyboard(form, numberInput, sendBtn, errorEl);
   }
 
   // ---- Code step -------------------------------------------------------------------
@@ -745,10 +831,13 @@
     var attempt = 0;
     var remaining = 30;
 
+    var keepVisible = function () {};
+
     function showError(text) {
       errorEl.textContent = text;
       errorEl.classList.toggle("hidden", !text);
       codeInput.setAttribute("aria-invalid", text ? "true" : "false");
+      if (text) keepVisible();
     }
 
     function startCountdown() {
@@ -853,7 +942,7 @@
     ctx.contentEl.appendChild(ctx.card(codeChildren));
 
     startCountdown();
-    watchKeyboard(form, codeInput, verifyBtn);
+    keepVisible = watchKeyboard(form, codeInput, verifyBtn, errorEl);
     try { codeInput.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
   }
 
@@ -864,6 +953,7 @@
     parse: parse,
     explicitIso: explicitIso,
     clean: clean,
+    likelyIso: likelyIso,
     countries: BY_ISO,
     codes: CODES,
     main: MAIN
