@@ -399,7 +399,7 @@
   }
 
   // ---- Firebase phone auth (group links only) -------------------------------
-  var firebaseState = { app: null, auth: null, authMod: null, confirmationResult: null, verifiedPhone: null };
+  var firebaseState = { app: null, auth: null, authMod: null, confirmationResult: null, verifiedPhone: null, verifier: null };
 
   function loadFirebase() {
     if (firebaseState.auth) return Promise.resolve(firebaseState);
@@ -442,9 +442,24 @@
     return firebaseState.auth.currentUser.getIdToken().catch(function () { return null; });
   }
 
+  function clearVerifier() {
+    var v = firebaseState.verifier;
+    firebaseState.verifier = null;
+    if (v && typeof v.clear === "function") { try { v.clear(); } catch (e) { /* already gone */ } }
+  }
+
+  // Stops waiting for a code that is being sent (the robot check was
+  // closed, or the visitor went back). The next send starts clean.
+  function cancelPhoneCode() {
+    firebaseState.confirmationResult = null;
+    clearVerifier();
+  }
+
   function sendPhoneCode(e164, recaptchaContainerId) {
     return loadFirebase().then(function (fb) {
+      clearVerifier();
       var verifier = new fb.authMod.RecaptchaVerifier(fb.auth, recaptchaContainerId, { size: "invisible" });
+      firebaseState.verifier = verifier;
       return fb.authMod.signInWithPhoneNumber(fb.auth, e164, verifier).then(function (confirmationResult) {
         firebaseState.confirmationResult = confirmationResult;
         return confirmationResult;
@@ -683,84 +698,54 @@
   }
 
   // ---- Phone step (group links) ----------------------------------------
-  var COUNTRY_CODES = ["+49", "+43", "+41", "+31", "+33", "+34", "+39", "+44", "+48", "+351", "+45", "+46", "+47", "+358"];
+  // The number reading, country list and both screens live in
+  // assets/rsvp-phone.js, fetched only when this step is shown, so the
+  // first screen of an invitation does not carry them.
+  var phoneModulePromise = null;
+
+  function loadPhoneModule() {
+    if (window.PinfoPhone) return Promise.resolve(window.PinfoPhone);
+    if (phoneModulePromise) return phoneModulePromise;
+    phoneModulePromise = new Promise(function (resolve, reject) {
+      var tag = document.createElement("script");
+      tag.src = "/assets/rsvp-phone.js";
+      tag.onload = function () { window.PinfoPhone ? resolve(window.PinfoPhone) : reject(new Error("phone module missing")); };
+      tag.onerror = function () { reject(new Error("phone module failed")); };
+      document.head.appendChild(tag);
+    }).catch(function (e) { phoneModulePromise = null; throw e; });
+    return phoneModulePromise;
+  }
 
   function renderPhoneStep(token, preview, onVerified) {
     clear(contentEl);
 
+    var heading = preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "");
+
     if (!firebaseConfigured()) {
       contentEl.appendChild(card([
-        el("h2", { class: "rsvp-heading", text: preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "") }),
+        el("h2", { class: "rsvp-heading", text: heading }),
         el("p", { class: "meta", text: S.notConfigured })
       ]));
       return;
     }
 
-    var countrySelect = el("select", { class: "input input-country" },
-      COUNTRY_CODES.map(function (c) { return el("option", { value: c, text: c }, []); })
-    );
-    countrySelect.value = "+49";
-    var numberInput = el("input", { type: "tel", class: "input input-phone", placeholder: S.phoneLabel, autocomplete: "tel-national" });
-    var errorEl = el("p", { class: "field-error hidden" });
-    var recaptchaDiv = el("div", { id: "recaptcha-container-" + token });
-
-    var sendBtn = el("button", { type: "button", class: "btn btn-primary", text: S.sendCode });
-    sendBtn.addEventListener("click", function () {
-      var digits = numberInput.value.replace(/[^0-9]/g, "").replace(/^0+/, "");
-      if (!digits) {
-        errorEl.textContent = S.nameRequired === S.nameRequired ? S.phoneLabel : "";
-        errorEl.classList.remove("hidden");
-        return;
-      }
-      var e164 = countrySelect.value + digits;
-      sendBtn.disabled = true;
-      sendPhoneCode(e164, recaptchaDiv.id).then(function () {
-        renderCodeStep(token, preview, e164, onVerified);
-      }).catch(function () {
-        sendBtn.disabled = false;
-        errorEl.textContent = S.genericError;
-        errorEl.classList.remove("hidden");
-      });
-    });
-
+    // Same top of the screen while the phone module loads.
     contentEl.appendChild(card([
-      el("h2", { class: "rsvp-heading", text: preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "") }),
-      el("p", { class: "meta", text: S.groupSub }),
-      // The privacy policy link sits above the phone number field, so it is
-      // visible before anyone types a number (not only further down).
-      privacyGroupLine(),
-      el("div", { class: "field phone-row" }, [countrySelect, numberInput]),
-      errorEl,
-      sendBtn,
-      recaptchaDiv
+      el("h2", { class: "rsvp-heading", text: heading }),
+      el("p", { class: "meta", text: S.groupSub })
     ]));
-  }
 
-  function renderCodeStep(token, preview, e164, onVerified) {
-    clear(contentEl);
-    var codeInput = el("input", {
-      type: "text", inputmode: "numeric", autocomplete: "one-time-code", maxlength: "6",
-      class: "input input-code", placeholder: S.codeLabel
-    });
-    var errorEl = el("p", { class: "field-error hidden" });
-    var verifyBtn = el("button", { type: "button", class: "btn btn-primary", text: S.verify });
-    verifyBtn.addEventListener("click", function () {
-      verifyBtn.disabled = true;
-      confirmPhoneCode(codeInput.value.trim()).then(function () {
-        onVerified(e164);
-      }).catch(function () {
-        verifyBtn.disabled = false;
-        errorEl.textContent = S.genericError;
-        errorEl.classList.remove("hidden");
+    loadPhoneModule().then(function (phone) {
+      phone.renderPhone({
+        token: token, locale: LOCALE, S: S, heading: heading,
+        el: el, clear: clear, card: card, privacyGroupLine: privacyGroupLine,
+        fmtPhoneDisplay: fmtPhoneDisplay, contentEl: contentEl, rootEl: root,
+        sendPhoneCode: sendPhoneCode, confirmPhoneCode: confirmPhoneCode, cancelPhoneCode: cancelPhoneCode,
+        onVerified: onVerified
       });
+    }, function () {
+      errorRetryScreen(S.networkError, function () { renderPhoneStep(token, preview, onVerified); });
     });
-    contentEl.appendChild(card([
-      el("h2", { class: "rsvp-heading", text: preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "") }),
-      el("p", { class: "meta", text: S.codeLabel }),
-      codeInput,
-      errorEl,
-      verifyBtn
-    ]));
   }
 
   // ---- Result handling -------------------------------------------------
