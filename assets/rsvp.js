@@ -744,6 +744,57 @@
     try { return /[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(t); } catch (e) { return /[A-Za-z0-9À-￿]/.test(t); }
   }
 
+  // The red line under the name field. While it shows a name problem the
+  // field says so (aria-invalid, described by the line); the line and both
+  // attributes go as soon as the field holds a usable name, and come back
+  // only when an answer is tapped again with the field empty.
+  function nameErrorLine(errorEl, nameInput) {
+    var nameProblem = false;
+    errorEl.id = "name-error";
+    function hide() {
+      nameProblem = false;
+      errorEl.classList.add("hidden");
+      if (nameInput) {
+        nameInput.removeAttribute("aria-invalid");
+        nameInput.removeAttribute("aria-describedby");
+      }
+    }
+    function show(text) {
+      errorEl.textContent = text;
+      errorEl.classList.remove("hidden");
+      nameProblem = !!nameInput && (text === S.nameRequired || text === S.nameNotAllowed);
+      if (nameProblem) {
+        nameInput.setAttribute("aria-invalid", "true");
+        nameInput.setAttribute("aria-describedby", "name-error");
+      } else if (nameInput) {
+        nameInput.removeAttribute("aria-invalid");
+        nameInput.removeAttribute("aria-describedby");
+      }
+    }
+    if (nameInput) {
+      nameInput.addEventListener("input", function () {
+        if (nameProblem && nameUsable(cleanName(nameInput.value))) hide();
+      });
+    }
+    return { show: show, hide: hide };
+  }
+
+  // The name this guest typed on the web for this event (or the one the host
+  // gave), as the server sends it back in `your_name`. A missing key, null or
+  // a blank string is no name. Kept per link for this page view, so the change
+  // form opens with it filled in. A name filled in counts as typed.
+  var knownNames = {};
+
+  function ingestName(key, o) {
+    if (!key || !o || typeof o.your_name !== "string") return;
+    var n = cleanName(o.your_name);
+    if (nameUsable(n)) knownNames[key] = n;
+  }
+
+  function knownName(key) {
+    return (key && knownNames[key]) || "";
+  }
+
   // ---- "Answer by <day>" ------------------------------------------------------
   // rsvp_by is a calendar day ("YYYY-MM-DD"), not a moment: it is read as
   // three numbers and never turned into a Date, so no time zone can move it.
@@ -902,21 +953,22 @@
     // personal link's invitee has no number check, so the name is asked.
     var skipName = !!opts.skipName;
     var nameVisible = !skipName && isPersonal;
+    var startName = knownName(key) || (isPersonal && preview.invitee_first_name ? preview.invitee_first_name : "");
     var nameInput = skipName ? null : el("input", {
       type: "text", class: "input", maxlength: "40", placeholder: S.namePlaceholder, autocomplete: "name",
-      value: isPersonal && preview.invitee_first_name ? preview.invitee_first_name : ""
+      value: startName
     });
-    if (nameInput && isPersonal && preview.invitee_first_name) nameInput.value = preview.invitee_first_name;
+    if (nameInput && startName) nameInput.value = startName;
     var nameField = skipName ? null : el("div", { class: nameVisible ? "field" : "field hidden" }, [
       el("label", { class: "field-label", text: S.nameLabel }),
       nameInput
     ]);
     var errorEl = el("p", { class: "field-error hidden" });
+    var errorLine = nameErrorLine(errorEl, nameInput);
     var controls = null;
 
     function showError(text) {
-      errorEl.textContent = text;
-      errorEl.classList.remove("hidden");
+      errorLine.show(text);
     }
 
     function revealName() {
@@ -937,7 +989,7 @@
         nameInput.focus();
         return;
       }
-      errorEl.classList.add("hidden");
+      errorLine.hide();
       setDisabled(true);
       rsvpAnswer(token, response, name, plus, authCtx && authCtx.idToken).then(function (res) {
         setDisabled(false);
@@ -945,6 +997,7 @@
         if (res.data && res.data.status === "ok") {
           var sp = serverPlus(res.data);
           rememberPlus(key, response, response === "going" ? (sp !== null ? sp : plus) : 0);
+          if (name && key) knownNames[key] = name;
         }
         handleRsvpResult(token, preview, authCtx, res.data, { showError: showError, revealName: revealName });
       });
@@ -1170,6 +1223,7 @@
     var status = data && data.status;
     if (status === "ok") {
       ingestPlus(token, data.response, serverPlus(data));
+      ingestName(answerKey(token), data);
       return renderThankYou(token, data, authCtx, preview);
     }
     if (status === "pending_approval") return renderPendingScreen(token, preview, authCtx);
@@ -1637,6 +1691,7 @@
     var view = privateView(data);
     var sp = serverPlus(data);
     ingestPlus(null, view.response, sp !== null ? sp : previewPlus(data.preview));
+    ingestName(answerKey(null), data);
     if (view.isHost) return renderPrivateHost(view, authCtx);
     renderPrivateAnswerForm(view, authCtx);
   }
@@ -1703,15 +1758,17 @@
     var nameInput = el("input", {
       type: "text", class: "input", maxlength: "40", placeholder: S.namePlaceholder, autocomplete: "name"
     });
+    var priorName = knownName(key);
+    if (priorName) nameInput.value = priorName;
     var nameField = el("div", { class: "field hidden" }, [
       el("label", { class: "field-label", text: S.nameLabel }),
       nameInput
     ]);
     var errorEl = el("p", { class: "field-error hidden" });
+    var errorLine = nameErrorLine(errorEl, nameInput);
 
     function showError(text) {
-      errorEl.textContent = text;
-      errorEl.classList.remove("hidden");
+      errorLine.show(text);
     }
 
     function revealName() {
@@ -1729,7 +1786,7 @@
         nameInput.focus();
         return;
       }
-      errorEl.classList.add("hidden");
+      errorLine.hide();
       controls.setDisabled(true);
       // Guests can only come with Going; the server ignores them otherwise.
       rsvpAnswer(null, response, name, response === "going" ? plus : 0, authCtx.idToken).then(function (res) {
@@ -1738,6 +1795,7 @@
         if (res.data && res.data.status === "ok") {
           var sp = serverPlus(res.data);
           rememberPlus(key, response, response === "going" ? (sp !== null ? sp : plus) : 0);
+          if (name && key) knownNames[key] = name;
         }
         handlePrivateRsvpResult(res.data, { view: view, authCtx: authCtx, showError: showError, revealName: revealName });
       });
@@ -1872,6 +1930,7 @@
             if (sres.timedOut) return renderNetworkError(function () { init(rootNode, token); });
             if (sres.data && sres.data.status === "ok") {
               ingestPlus(token, sres.data.response, serverPlus(sres.data));
+              ingestName(answerKey(token), sres.data);
               return renderThankYou(token, sres.data, null, preview);
             }
             ingestPlus(token, preview.current_response, previewPlus(preview));
