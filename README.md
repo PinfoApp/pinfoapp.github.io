@@ -107,6 +107,21 @@ three pages to the first 10 characters of
 fails to start, the page reloads once and then shows a short line with a Reload
 button instead of staying on the loading card.
 
+## Text size, language and the first screen
+
+- Text sizes in the event pages and in `assets/rsvp-phone.js` are written as
+  `calc(N * var(--fs) / 16)`. `--fs` is 16 px by default and follows the text
+  size set in iPhone Settings (Dynamic Type); input fields never go below 16 px.
+- A German browser gets German words everywhere on these pages and
+  `<html lang="de">`, so Safari does not offer to translate them. Every other
+  language stays English. The answer page has its own German strings in
+  `assets/rsvp.js`; the plain event page and the not-found pages use `tr(en, de)`.
+- All event pages show the same no-cover picture (`assets/cover-placeholder.svg`)
+  when an event has no cover or the cover fails to load.
+- For an `/i/<token>` link the page asks for the event right away, while
+  `assets/rsvp.js` downloads, and hands the answer over once. On phones the card
+  starts at the top, so nothing slides when the event loads.
+
 ## SEO / link previews
 
 - `index.html`'s `<head>` carries a meta description, canonical URL, Open Graph
