@@ -744,6 +744,41 @@
     try { return /[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(t); } catch (e) { return /[A-Za-z0-9À-￿]/.test(t); }
   }
 
+  // The red line under the name field. While it shows a name problem the
+  // field says so (aria-invalid, described by the line); the line and both
+  // attributes go as soon as the field holds a usable name, and come back
+  // only when an answer is tapped again with the field empty.
+  function nameErrorLine(errorEl, nameInput) {
+    var nameProblem = false;
+    errorEl.id = "name-error";
+    function hide() {
+      nameProblem = false;
+      errorEl.classList.add("hidden");
+      if (nameInput) {
+        nameInput.removeAttribute("aria-invalid");
+        nameInput.removeAttribute("aria-describedby");
+      }
+    }
+    function show(text) {
+      errorEl.textContent = text;
+      errorEl.classList.remove("hidden");
+      nameProblem = !!nameInput && (text === S.nameRequired || text === S.nameNotAllowed);
+      if (nameProblem) {
+        nameInput.setAttribute("aria-invalid", "true");
+        nameInput.setAttribute("aria-describedby", "name-error");
+      } else if (nameInput) {
+        nameInput.removeAttribute("aria-invalid");
+        nameInput.removeAttribute("aria-describedby");
+      }
+    }
+    if (nameInput) {
+      nameInput.addEventListener("input", function () {
+        if (nameProblem && nameUsable(cleanName(nameInput.value))) hide();
+      });
+    }
+    return { show: show, hide: hide };
+  }
+
   // ---- "Answer by <day>" ------------------------------------------------------
   // rsvp_by is a calendar day ("YYYY-MM-DD"), not a moment: it is read as
   // three numbers and never turned into a Date, so no time zone can move it.
@@ -912,11 +947,11 @@
       nameInput
     ]);
     var errorEl = el("p", { class: "field-error hidden" });
+    var errorLine = nameErrorLine(errorEl, nameInput);
     var controls = null;
 
     function showError(text) {
-      errorEl.textContent = text;
-      errorEl.classList.remove("hidden");
+      errorLine.show(text);
     }
 
     function revealName() {
@@ -937,7 +972,7 @@
         nameInput.focus();
         return;
       }
-      errorEl.classList.add("hidden");
+      errorLine.hide();
       setDisabled(true);
       rsvpAnswer(token, response, name, plus, authCtx && authCtx.idToken).then(function (res) {
         setDisabled(false);
@@ -1708,10 +1743,10 @@
       nameInput
     ]);
     var errorEl = el("p", { class: "field-error hidden" });
+    var errorLine = nameErrorLine(errorEl, nameInput);
 
     function showError(text) {
-      errorEl.textContent = text;
-      errorEl.classList.remove("hidden");
+      errorLine.show(text);
     }
 
     function revealName() {
@@ -1729,7 +1764,7 @@
         nameInput.focus();
         return;
       }
-      errorEl.classList.add("hidden");
+      errorLine.hide();
       controls.setDisabled(true);
       // Guests can only come with Going; the server ignores them otherwise.
       rsvpAnswer(null, response, name, response === "going" ? plus : 0, authCtx.idToken).then(function (res) {
