@@ -162,7 +162,13 @@
       hostLine: "You are the host of this event.",
       back: "Back",
       answerToSeeAddress: "Answer to see the address.",
-      alreadySaidPlus: function (n) { return "You said Going +" + n + ". Change?"; }
+      alreadySaidPlus: function (n) { return "You said Going +" + n + ". Change?"; },
+      answerBy: function (d) { return "Please answer by " + d; },
+      answerByLate: function (d) { return "Answers were due on " + d + ". You can still answer."; },
+      goingPlus: function (n) { return "Going +" + n; },
+      question: function (title) { return title ? "Are you coming to " + title + "?" : "Are you coming?"; },
+      addressAfter: "The exact address is shown after you answer.",
+      askHint: "The host will see this as Going."
     },
     de: {
       invalid: "Dieser Einladungslink ist nicht mehr gültig.",
@@ -260,7 +266,13 @@
       hostLine: "Du bist der Gastgeber dieses Events.",
       back: "Zurück",
       answerToSeeAddress: "Antworte, um die Adresse zu sehen.",
-      alreadySaidPlus: function (n) { return "Du hast Dabei +" + n + " gesagt. Ändern?"; }
+      alreadySaidPlus: function (n) { return "Du hast Dabei +" + n + " gesagt. Ändern?"; },
+      answerBy: function (d) { return "Bitte antworte bis " + d; },
+      answerByLate: function (d) { return "Antworten waren bis " + d + " erbeten. Du kannst trotzdem noch antworten."; },
+      goingPlus: function (n) { return "Dabei +" + n; },
+      question: function (title) { return title ? "Kommst du zu " + title + "?" : "Kommst du?"; },
+      addressAfter: "Die genaue Adresse siehst du nach deiner Antwort.",
+      askHint: "Der Gastgeber sieht das als Dabei."
     }
   };
   var S = STRINGS[LOCALE];
@@ -693,6 +705,138 @@
     return S.alreadySaid[response] || "";
   }
 
+  // ---- Names ---------------------------------------------------------------
+  // Invisible and control characters out, spaces collapsed, at most 40
+  // characters (emoji count as one), and something a person could be called.
+  function cleanName(raw) {
+    var t = String(raw == null ? "" : raw)
+      .replace(/[\u0000-\u001F\u007F-\u009F​-‏‪-‮⁠⁦-⁩﻿]/g, " ")
+      .replace(/\s+/g, " ").trim();
+    var cps = Array.from(t);
+    if (cps.length > 40) t = cps.slice(0, 40).join("").trim();
+    return t;
+  }
+
+  function nameUsable(t) {
+    if (!t) return false;
+    try { return /[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(t); } catch (e) { return /[A-Za-z0-9À-￿]/.test(t); }
+  }
+
+  // ---- "Answer by <day>" ------------------------------------------------------
+  // rsvp_by is a calendar day ("YYYY-MM-DD"), not a moment: it is read as
+  // three numbers and never turned into a Date, so no time zone can move it.
+  var WEEKDAY_NAMES = {
+    en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    de: ["So.", "Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa."]
+  };
+  var MONTH_NAMES = {
+    en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    de: ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sept.", "Okt.", "Nov.", "Dez."]
+  };
+
+  function parseDay(text) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(text || ""));
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var dim = [31, (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (mo < 1 || mo > 12 || d < 1 || d > dim[mo - 1]) return null;
+    // Day of the week from the three numbers (0 = Sunday).
+    var t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+    var yy = mo < 3 ? y - 1 : y;
+    var wd = (yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) + t[mo - 1] + d) % 7;
+    return { y: y, mo: mo, d: d, wd: wd };
+  }
+
+  function fmtDay(p) {
+    return LOCALE === "de"
+      ? WEEKDAY_NAMES.de[p.wd] + ", " + p.d + ". " + MONTH_NAMES.de[p.mo - 1]
+      : WEEKDAY_NAMES.en[p.wd] + " " + p.d + " " + MONTH_NAMES.en[p.mo - 1];
+  }
+
+  // The sentence for the day, or "" when there is none (an absent key, null,
+  // or anything that is not a real day). After the day, in the visitor's
+  // own calendar, it says so. Nothing is ever blocked.
+  function answerByText(preview) {
+    var p = parseDay(preview && preview.rsvp_by);
+    if (!p) return "";
+    var now = new Date();
+    var today = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+    var late = today > p.y * 10000 + p.mo * 100 + p.d;
+    return late ? S.answerByLate(fmtDay(p)) : S.answerBy(fmtDay(p));
+  }
+
+  function answerByLine(preview) {
+    var text = answerByText(preview);
+    return text ? el("p", { class: "answer-by hint-left", text: text }) : null;
+  }
+
+  // ---- The guest's own plus-ones from the server ---------------------------------
+  // New keys, absent until the server has them: then everything works as
+  // before (the number the guest chose in this tab). When present they win.
+  function serverPlus(o) {
+    return o && typeof o.plus_ones === "number" && o.plus_ones >= 0 && o.plus_ones <= 3 ? Math.floor(o.plus_ones) : null;
+  }
+
+  function previewPlus(pv) {
+    return pv && typeof pv.current_plus_ones === "number" && pv.current_plus_ones >= 0 && pv.current_plus_ones <= 3 ? Math.floor(pv.current_plus_ones) : null;
+  }
+
+  function ingestPlus(token, response, plus) {
+    if (plus === null || plus === undefined) return;
+    rememberPlus(answerKey(token), response, response === "going" ? plus : 0);
+  }
+
+  // "N going, M maybe": people going including their plus-ones when the
+  // server counts them (going_headcount), else the faces plus this guest's
+  // own plus-ones. No line at all when the list is hidden (going is null).
+  function guestCountLine(guests, response, key) {
+    if (!guests || guests.visible === false || guests.going == null) return null;
+    var going;
+    if (typeof guests.going_headcount === "number") going = guests.going_headcount;
+    else going = (guests.going || 0) + (response === "going" ? recallPlus(key) : 0);
+    return S.guestCount(going, guests.maybe || 0);
+  }
+
+  // The three answer buttons. The +1 / +2 / +3 step belongs to Going only: it
+  // opens after tapping Going (preselected with the current plus-ones), so it
+  // can never be filled in and then lost on Maybe.
+  function answerControls(o) {
+    var plus = 0;
+    var area = el("div", { class: "rsvp-screen" });
+    var goingBtn = el("button", { type: "button", class: "btn btn-answer btn-going", text: S.btnGoing });
+    var maybeBtn = el("button", { type: "button", class: "btn btn-answer btn-maybe", text: S.btnMaybe, onclick: function () { o.submit("maybe", 0); } });
+    var cantBtn = el("button", { type: "button", class: "btn btn-answer btn-cant", text: S.btnCant, onclick: function () { o.submit("cant", 0); } });
+    var row = el("div", { class: "answer-row" }, [goingBtn, maybeBtn, cantBtn]);
+    var selected = { going: goingBtn, maybe: maybeBtn, cant: cantBtn }[o.current];
+    if (selected) selected.classList.add("selected");
+
+    function showButtons() {
+      plus = 0;
+      clear(area);
+      area.appendChild(row);
+    }
+    function showPlusStep() {
+      clear(area);
+      plus = Math.min(o.currentPlus || 0, o.maxPlus);
+      area.appendChild(plusOnesControl(o.maxPlus, function (v) { plus = v; }, plus));
+      area.appendChild(el("button", { type: "button", class: "btn btn-primary", text: S.btnGoing, onclick: function () { o.submit("going", plus); } }));
+      area.appendChild(el("a", {
+        href: "#", class: "change-answer-link", text: S.back,
+        onclick: function (e) { e.preventDefault(); showButtons(); }
+      }));
+    }
+    goingBtn.addEventListener("click", function () {
+      if (o.maxPlus > 0) showPlusStep(); else o.submit("going", 0);
+    });
+    area.appendChild(row);
+    return {
+      el: area,
+      setDisabled: function (disabled) {
+        Array.prototype.forEach.call(area.querySelectorAll("button"), function (b) { b.disabled = disabled; });
+      }
+    };
+  }
+
   function plusOnesControl(maxAllowed, onChange, initial) {
     if (!maxAllowed) return null;
     var value = initial > 0 && initial <= maxAllowed ? initial : 0;
@@ -700,7 +844,7 @@
     var buttons = [];
     function render() {
       buttons.forEach(function (b, i) {
-        if (i + 1 <= value) b.classList.add("chip-active"); else b.classList.remove("chip-active");
+        if (i + 1 === value) b.classList.add("chip-active"); else b.classList.remove("chip-active");
       });
     }
     for (var i = 1; i <= maxAllowed; i++) {
@@ -728,58 +872,67 @@
     clear(contentEl);
 
     var isPersonal = preview.link_kind === "personal";
-    var plusOnes = 0;
-    // A group-link visitor the server already has on the guest list (this
-    // is only ever true for the re-authenticated "Change my answer" case -
-    // see the change-answer-link handler below) already gave a name; skip
-    // asking for it again and send null, which the server keeps as-is.
+    var isFull = preview.status === "full";
+    var key = answerKey(token);
+    // Someone who already has a name on file (a verified guest: the host's
+    // contact name or the Pinfo account's name) is not asked for it again on
+    // every link: no field up front, the server says if it needs one. A
+    // personal link's invitee has no number check, so the name is asked.
     var skipName = !!opts.skipName;
+    var nameVisible = !skipName && isPersonal;
     var nameInput = skipName ? null : el("input", {
-      type: "text", class: "input", maxlength: "40",
-      placeholder: S.namePlaceholder,
+      type: "text", class: "input", maxlength: "40", placeholder: S.namePlaceholder, autocomplete: "name",
       value: isPersonal && preview.invitee_first_name ? preview.invitee_first_name : ""
     });
-    if (!skipName && isPersonal && preview.invitee_first_name) nameInput.value = preview.invitee_first_name;
-
+    if (nameInput && isPersonal && preview.invitee_first_name) nameInput.value = preview.invitee_first_name;
+    var nameField = skipName ? null : el("div", { class: nameVisible ? "field" : "field hidden" }, [
+      el("label", { class: "field-label", text: S.nameLabel }),
+      nameInput
+    ]);
     var errorEl = el("p", { class: "field-error hidden" });
+    var controls = null;
 
-    function submit(response) {
-      var name = skipName ? null : nameInput.value.trim();
-      if (!skipName && !name) {
-        errorEl.textContent = S.nameRequired;
-        errorEl.classList.remove("hidden");
+    function showError(text) {
+      errorEl.textContent = text;
+      errorEl.classList.remove("hidden");
+    }
+
+    function revealName() {
+      nameVisible = true;
+      if (nameField) nameField.classList.remove("hidden");
+      if (nameInput) nameInput.focus();
+    }
+
+    function setDisabled(disabled) {
+      if (controls) controls.setDisabled(disabled);
+      Array.prototype.forEach.call(contentEl.querySelectorAll(".ask-join-btn"), function (b) { b.disabled = disabled; });
+    }
+
+    function submit(response, plus) {
+      var name = nameInput ? (cleanName(nameInput.value) || null) : null;
+      if (nameVisible && !nameUsable(name)) {
+        showError(S.nameRequired);
         nameInput.focus();
         return;
       }
       errorEl.classList.add("hidden");
-      setButtonsDisabled(true);
-      rsvpAnswer(token, response, name, plusOnes, authCtx && authCtx.idToken).then(function (res) {
-        setButtonsDisabled(false);
+      setDisabled(true);
+      rsvpAnswer(token, response, name, plus, authCtx && authCtx.idToken).then(function (res) {
+        setDisabled(false);
         if (res.timedOut) return renderNetworkError(function () { renderAnswerForm(token, preview, authCtx, opts); });
-        if (res.data && res.data.status === "ok") rememberPlus(answerKey(token), response, response === "going" ? plusOnes : 0);
-        handleRsvpResult(token, preview, authCtx, res.data, { nameError: errorEl, formCtx: { token: token, preview: preview, authCtx: authCtx, opts: opts } });
+        if (res.data && res.data.status === "ok") {
+          var sp = serverPlus(res.data);
+          rememberPlus(key, response, response === "going" ? (sp !== null ? sp : plus) : 0);
+        }
+        handleRsvpResult(token, preview, authCtx, res.data, { showError: showError, revealName: revealName });
       });
-    }
-
-    var goingBtn = el("button", { type: "button", class: "btn btn-answer btn-going", text: S.btnGoing, onclick: function () { submit("going"); } });
-    var maybeBtn = el("button", { type: "button", class: "btn btn-answer btn-maybe", text: S.btnMaybe, onclick: function () { submit("maybe"); } });
-    var cantBtn = el("button", { type: "button", class: "btn btn-answer btn-cant", text: S.btnCant, onclick: function () { submit("cant"); } });
-    var buttonsRow = el("div", { class: "answer-row" }, [goingBtn, maybeBtn, cantBtn]);
-
-    // Only the button matching the current answer looks selected - none of
-    // them before a first answer exists.
-    var selectedBtn = { going: goingBtn, maybe: maybeBtn, cant: cantBtn }[opts.alreadyResponse];
-    if (selectedBtn) selectedBtn.classList.add("selected");
-
-    function setButtonsDisabled(disabled) {
-      Array.prototype.forEach.call(buttonsRow.querySelectorAll("button"), function (b) { b.disabled = disabled; });
     }
 
     var heading;
     if (isPersonal) {
       heading = S.personalGreeting(preview.invitee_first_name || "", preview.host_name || "");
     } else {
-      heading = preview.status === "full" ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "");
+      heading = isFull ? S.fullHeading(preview.host_name || "") : S.groupGreeting(preview.host_name || "");
     }
 
     var children = [el("h2", { class: "rsvp-heading", text: heading })];
@@ -787,13 +940,11 @@
     var verified = verifiedLine(token, authCtx);
     if (verified) children.push(verified);
 
-    // S.groupSub ("Verify your phone number...") belongs on the phone step
-    // only - by the time this form shows for a group link, verification is
-    // already done. On a first answer, point at the buttons instead; on
-    // the change-answer screen, the "You said X. Change?" line below
-    // already says enough.
-    if (!isPersonal && preview.status !== "full" && !opts.alreadyResponse) {
-      children.push(el("p", { class: "meta", text: S.chooseAnswer }));
+    // On a first answer say what is being asked; on the change-answer
+    // screen the "You said X. Change?" line below says enough.
+    if (!isFull && !opts.alreadyResponse) {
+      children.push(el("p", { class: "meta", text: S.question(preview.title) }));
+      children.push(el("p", { class: "hint-left", text: S.addressAfter }));
     }
 
     if (preview.description) {
@@ -801,29 +952,32 @@
     }
 
     if (opts.alreadyResponse) {
-      children.push(el("p", { class: "already-said", text: alreadySaidText(opts.alreadyResponse, recallPlus(answerKey(token))) }));
+      children.push(el("p", { class: "already-said", text: alreadySaidText(opts.alreadyResponse, recallPlus(key)) }));
       children.push(el("p", { class: "hint-left", text: S.changeAnytime }));
     }
 
-    if (!skipName) {
-      children.push(el("div", { class: "field" }, [
-        el("label", { class: "field-label", text: S.nameLabel }),
-        nameInput
-      ]));
-    }
+    if (nameField) children.push(nameField);
     children.push(errorEl);
 
-    // A request to join is for the person, so there is no +1 to choose on it.
-    var plusCtl = preview.status === "full" ? null : plusOnesControl(preview.plus_ones_allowed || 0, function (v) { plusOnes = v; });
-    if (plusCtl) children.push(plusCtl);
+    var byLine = answerByLine(preview);
+    if (byLine) children.push(byLine);
 
-    if (preview.status === "full") {
+    if (isFull) {
+      // A request to join is for the person: no +1 to choose, and the host
+      // sees it as Going, which is said.
       children.push(el("button", {
-        type: "button", class: "btn btn-primary", text: S.askToJoin,
-        onclick: function () { submit("going"); }
+        type: "button", class: "btn btn-primary ask-join-btn", text: S.askToJoin,
+        onclick: function () { submit("going", 0); }
       }));
+      children.push(el("p", { class: "hint-left", text: S.askHint }));
     } else {
-      children.push(buttonsRow);
+      controls = answerControls({
+        maxPlus: preview.plus_ones_allowed || 0,
+        current: opts.alreadyResponse,
+        currentPlus: recallPlus(key),
+        submit: submit
+      });
+      children.push(controls.el);
     }
 
     children.push(el("p", { class: "privacy-line", text: S.ageConfirm }));
@@ -875,13 +1029,15 @@
 
     // Same top of the screen while the phone module loads.
     var top = [];
+    var byText = preview ? answerByText(preview) : "";
     if (heading) top.push(el("h2", { class: "rsvp-heading", text: heading }));
     if (!opts.hideSub) top.push(el("p", { class: "meta", text: S.groupSub }));
+    if (byText) top.push(el("p", { class: "answer-by hint-left", text: byText }));
     if (top.length) contentEl.appendChild(card(top));
 
     loadPhoneModule().then(function (phone) {
       phone.renderPhone({
-        token: opts.key || token, locale: LOCALE, S: S, heading: heading, hideSub: !!opts.hideSub, notice: opts.notice || null,
+        token: opts.key || token, locale: LOCALE, S: S, heading: heading, hideSub: !!opts.hideSub, notice: opts.notice || null, answerBy: byText,
         el: el, clear: clear, card: card, privacyGroupLine: privacyGroupLine,
         fmtPhoneDisplay: fmtPhoneDisplay, contentEl: contentEl, rootEl: root, firstTap: installFirstTap,
         sendPhoneCode: sendPhoneCode, confirmPhoneCode: confirmPhoneCode, cancelPhoneCode: cancelPhoneCode,
@@ -913,10 +1069,12 @@
         renderPhoneStep(token, preview, function (e164) { continueAfterVerification(token, preview, e164); });
         break;
       case "name_required":
-        if (extra.nameError) { extra.nameError.textContent = S.nameRequired; extra.nameError.classList.remove("hidden"); }
+        if (extra.revealName) extra.revealName();
+        if (extra.showError) extra.showError(S.nameRequired);
         break;
       case "name_not_allowed":
-        if (extra.nameError) { extra.nameError.textContent = S.nameNotAllowed; extra.nameError.classList.remove("hidden"); }
+        if (extra.revealName) extra.revealName();
+        if (extra.showError) extra.showError(S.nameNotAllowed);
         break;
       case "invalid":
         renderSimpleMessage(S.invalid);
@@ -959,6 +1117,7 @@
           var fresh = rows && rows[0] ? rows[0] : preview;
           if (fresh.status === "cancelled") return renderSimpleMessage(S.cancelled);
           if (fresh.status === "past") return renderSimpleMessage(S.past);
+          if (fresh.status === "removed") return renderSimpleMessage(S.removed);
           renderAnswerForm(token, fresh, authCtx);
         });
       });
@@ -987,7 +1146,10 @@
 
   function handleStatusResult(token, preview, authCtx, data) {
     var status = data && data.status;
-    if (status === "ok") return renderThankYou(token, data, authCtx, preview);
+    if (status === "ok") {
+      ingestPlus(token, data.response, serverPlus(data));
+      return renderThankYou(token, data, authCtx, preview);
+    }
     if (status === "pending_approval") return renderPendingScreen(token, preview, authCtx);
     if (status === "declined") return renderSimpleMessage(S.declinedText(preview.host_name || ""));
     if (status === "not_responded") return renderAnswerForm(token, preview, authCtx);
@@ -1121,8 +1283,10 @@
       : data.response === "maybe" ? S.thankMaybe
         : S.thankCant((ev && ev.host_name) || "");
 
+    var ownPlus = data.response === "going" ? recallPlus(answerKey(token)) : 0;
     var thankChildren = [
       el("h2", { class: "rsvp-heading", text: thankText }),
+      ownPlus > 0 ? el("p", { class: "already-said", text: S.goingPlus(ownPlus) }) : null,
       el("a", {
         class: "change-answer-link", href: "#",
         text: S.changeAnswer,
@@ -1178,9 +1342,9 @@
       ]));
     }
 
-    var ownPlus = data.response === "going" ? recallPlus(answerKey(token)) : 0;
+    var countLine = guestCountLine(guests, data.response, answerKey(token));
     if (guests.visible && guests.list && guests.list.length && (data.response === "going" || data.response === "maybe")) {
-      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount((guests.going || 0) + ownPlus, guests.maybe || 0) }));
+      if (countLine) detailChildren.push(el("p", { class: "guest-count", text: countLine }));
       var list = el("div", { class: "guest-list" }, guests.list.slice(0, 30).map(function (g) {
         var avatar = g.avatar_url
           ? el("img", { class: "guest-avatar", src: g.avatar_url, alt: "" })
@@ -1188,8 +1352,8 @@
         return el("div", { class: "guest-row" }, [avatar, el("span", { class: "guest-name", text: g.name || "" })]);
       }));
       detailChildren.push(list);
-    } else if (data.response === "going" || data.response === "maybe") {
-      detailChildren.push(el("p", { class: "guest-count", text: S.guestCount((guests.going || 0) + ownPlus, guests.maybe || 0) }));
+    } else if ((data.response === "going" || data.response === "maybe") && countLine) {
+      detailChildren.push(el("p", { class: "guest-count", text: countLine }));
     }
 
     if (detailChildren.length) contentEl.appendChild(card(detailChildren));
@@ -1393,6 +1557,7 @@
         area: pv.area || ev.area,
         plus_ones_allowed: plus || 0,
         guest_list_visible: pv.guest_list_visible,
+        rsvp_by: pv.rsvp_by,
         status: "live",
         link_kind: "plain"
       },
@@ -1405,6 +1570,8 @@
 
   function renderPrivateEvent(data, authCtx) {
     var view = privateView(data);
+    var sp = serverPlus(data);
+    ingestPlus(null, view.response, sp !== null ? sp : previewPlus(data.preview));
     if (view.isHost) return renderPrivateHost(view, authCtx);
     renderPrivateAnswerForm(view, authCtx);
   }
@@ -1430,9 +1597,9 @@
       children.push(el("p", { class: "meta", text: S.answerToSeeAddress }));
     }
 
+    var countLine = view.preview.guest_list_visible !== false ? guestCountLine(guests, view.response, answerKey(null)) : null;
     if (guests.visible && view.preview.guest_list_visible !== false) {
-      var ownPlus = view.response === "going" ? recallPlus(answerKey(null)) : 0;
-      children.push(el("p", { class: "guest-count", text: S.guestCount((guests.going || 0) + ownPlus, guests.maybe || 0) }));
+      if (countLine) children.push(el("p", { class: "guest-count", text: countLine }));
       if (kept && guests.list && guests.list.length) {
         children.push(el("div", { class: "guest-list" }, guests.list.slice(0, 30).map(function (g) {
           var avatar = g.avatar_url
@@ -1460,11 +1627,10 @@
   function renderPrivateAnswerForm(view, authCtx) {
     var pv = view.preview;
     var ev = view.event || {};
+    var key = answerKey(null);
     setHeader(pv);
     clear(contentEl);
 
-    var maxPlus = pv.plus_ones_allowed || 0;
-    var plusOnes = 0;
     var nameVisible = false;
     // The server already has a name for most visitors (the host's contact
     // name, or the Pinfo account's name), so none is asked for up front. It
@@ -1489,72 +1655,51 @@
       nameInput.focus();
     }
 
-    var answerArea = el("div", { class: "rsvp-screen" });
+    var controls = null;
 
-    function setDisabled(disabled) {
-      Array.prototype.forEach.call(answerArea.querySelectorAll("button"), function (b) { b.disabled = disabled; });
-    }
-
-    function submit(response) {
-      var typed = nameInput.value.trim();
-      if (nameVisible && !typed) {
+    function submit(response, plus) {
+      var name = cleanName(nameInput.value) || null;
+      if (nameVisible && !nameUsable(name)) {
         showError(S.nameRequired);
         nameInput.focus();
         return;
       }
       errorEl.classList.add("hidden");
-      setDisabled(true);
+      controls.setDisabled(true);
       // Guests can only come with Going; the server ignores them otherwise.
-      rsvpAnswer(null, response, typed || null, response === "going" ? plusOnes : 0, authCtx.idToken).then(function (res) {
-        setDisabled(false);
+      rsvpAnswer(null, response, name, response === "going" ? plus : 0, authCtx.idToken).then(function (res) {
+        controls.setDisabled(false);
         if (res.timedOut) return renderNetworkError(function () { renderPrivateAnswerForm(view, authCtx); });
-        if (res.data && res.data.status === "ok") rememberPlus(answerKey(null), response, response === "going" ? plusOnes : 0);
+        if (res.data && res.data.status === "ok") {
+          var sp = serverPlus(res.data);
+          rememberPlus(key, response, response === "going" ? (sp !== null ? sp : plus) : 0);
+        }
         handlePrivateRsvpResult(res.data, { view: view, authCtx: authCtx, showError: showError, revealName: revealName });
       });
     }
 
-    var goingBtn = el("button", { type: "button", class: "btn btn-answer btn-going", text: S.btnGoing });
-    var maybeBtn = el("button", { type: "button", class: "btn btn-answer btn-maybe", text: S.btnMaybe, onclick: function () { submit("maybe"); } });
-    var cantBtn = el("button", { type: "button", class: "btn btn-answer btn-cant", text: S.btnCant, onclick: function () { submit("cant"); } });
-    var buttonsRow = el("div", { class: "answer-row" }, [goingBtn, maybeBtn, cantBtn]);
-    var selectedBtn = { going: goingBtn, maybe: maybeBtn, cant: cantBtn }[view.response];
-    if (selectedBtn) selectedBtn.classList.add("selected");
-
-    // The +1 / +2 / +3 step belongs to Going only: it opens after tapping
-    // Going, so it can never be filled in and then lost on Maybe.
-    function showButtons() {
-      plusOnes = 0;
-      clear(answerArea);
-      answerArea.appendChild(buttonsRow);
-    }
-    function showPlusStep() {
-      clear(answerArea);
-      plusOnes = Math.min(recallPlus(answerKey(null)), maxPlus);
-      answerArea.appendChild(plusOnesControl(maxPlus, function (v) { plusOnes = v; }, plusOnes));
-      answerArea.appendChild(el("button", { type: "button", class: "btn btn-primary", text: S.btnGoing, onclick: function () { submit("going"); } }));
-      answerArea.appendChild(el("a", {
-        href: "#", class: "change-answer-link", text: S.back,
-        onclick: function (e) { e.preventDefault(); showButtons(); }
-      }));
-    }
-    goingBtn.addEventListener("click", function () {
-      if (maxPlus > 0) showPlusStep(); else submit("going");
+    controls = answerControls({
+      maxPlus: pv.plus_ones_allowed || 0,
+      current: view.response,
+      currentPlus: recallPlus(key),
+      submit: submit
     });
-    answerArea.appendChild(buttonsRow);
 
     var children = [];
     if (pv.host_name) children.push(el("h2", { class: "rsvp-heading", text: S.groupGreeting(pv.host_name) }));
     var verified = verifiedLine(null, authCtx);
     if (verified) children.push(verified);
     if (view.response) {
-      children.push(el("p", { class: "already-said", text: alreadySaidText(view.response, recallPlus(answerKey(null))) }));
+      children.push(el("p", { class: "already-said", text: alreadySaidText(view.response, recallPlus(key)) }));
       children.push(el("p", { class: "hint-left", text: S.changeAnytime }));
     } else {
-      children.push(el("p", { class: "meta", text: S.chooseAnswer }));
+      children.push(el("p", { class: "meta", text: S.question(pv.title) }));
     }
     children.push(nameField);
     children.push(errorEl);
-    children.push(answerArea);
+    var byLine = answerByLine(pv);
+    if (byLine) children.push(byLine);
+    children.push(controls.el);
     children.push(el("p", { class: "privacy-line", text: S.ageConfirm }));
     children.push(privacyGroupLine());
     contentEl.appendChild(card(children));
@@ -1660,7 +1805,11 @@
         if (preview.current_response) {
           rsvpStatus(token, null).then(function (sres) {
             if (sres.timedOut) return renderNetworkError(function () { init(rootNode, token); });
-            if (sres.data && sres.data.status === "ok") return renderThankYou(token, sres.data, null, preview);
+            if (sres.data && sres.data.status === "ok") {
+              ingestPlus(token, sres.data.response, serverPlus(sres.data));
+              return renderThankYou(token, sres.data, null, preview);
+            }
+            ingestPlus(token, preview.current_response, previewPlus(preview));
             renderAnswerForm(token, preview, null, { alreadyResponse: preview.current_response });
           });
         } else {

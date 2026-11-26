@@ -782,6 +782,7 @@
     var children = [];
     if (ctx.heading) children.push(ctx.el("h2", { class: "rsvp-heading", text: ctx.heading }));
     if (!ctx.hideSub) children.push(ctx.el("p", { class: "meta", text: S.groupSub }));
+    if (ctx.answerBy) children.push(ctx.el("p", { class: "answer-by hint-left", text: ctx.answerBy }));
     // The privacy policy link sits above the phone number field.
     children.push(ctx.privacyGroupLine());
     if (ctx.notice) children.push(ctx.el("p", { class: "pp-note", role: "status", text: ctx.notice }));
