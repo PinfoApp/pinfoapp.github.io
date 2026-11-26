@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="referrer" content="origin" />
   <script>
+    // The page's words follow the browser's language; say so, so the
+    // browser does not offer to translate them.
+    if (/^de/i.test(navigator.language || "")) document.documentElement.lang = "de";
     // Show nothing when this page is opened inside another page's frame.
     (function () {
       var framed = false;
@@ -39,9 +42,11 @@
   <meta name="twitter:image" id="twitter-image" content="https://pinfoapp.com/assets/e-srbqd2rd-cover.jpg" />
 
   <link rel="icon" href="/assets/pinfo-bb.png" type="image/png">
+  <link rel="preconnect" href="https://ftmwhexhxdskasskzglp.supabase.co" crossorigin>
 
   <style>
     :root {
+      --fs: 1rem; /* 16px; on iPhone it follows the text size set in Settings */
       --indigo: #4f46e5;
       --indigo-deep: #3730a3;
       --install-purple: #6b4eff;
@@ -52,11 +57,16 @@
       --card: #ffffff;
       --bg: #f4f3fb;
     }
+    @supports (font: -apple-system-body) {
+      html { font: -apple-system-body; }
+      :root { --fs: calc(1rem * 16 / 17); }
+    }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; height: 100%; }
     html { background: var(--bg); touch-action: manipulation; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: var(--fs);
       background: linear-gradient(160deg, #ede9fe 0%, var(--bg) 55%);
       color: var(--ink);
       display: flex; align-items: center; justify-content: center;
@@ -75,31 +85,31 @@
     }
     .cover {
       width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block;
-      background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+      background: linear-gradient(135deg, #ede9fe, #f4f3fb);
     }
     .body { padding: 22px 22px 26px; }
     .brand {
       display: inline-flex; align-items: center; gap: 7px;
-      font-weight: 700; color: var(--indigo); font-size: 15px; margin-bottom: 12px;
+      font-weight: 700; color: var(--indigo); font-size: calc(15 * var(--fs) / 16); margin-bottom: 12px;
     }
     .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--indigo); }
     .platform-note {
-      background: var(--install-tint); color: var(--indigo); font-size: 13px; font-weight: 600;
+      background: var(--install-tint); color: var(--indigo); font-size: calc(13 * var(--fs) / 16); font-weight: 600;
       padding: 10px 14px; border-radius: 12px; margin: 0 0 16px;
     }
-    h1 { font-size: 23px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.2px; overflow-wrap: break-word; }
-    .meta { color: var(--muted); font-size: 15px; margin: 0 0 10px; }
-    .ended-note { color: var(--muted); font-size: 13px; font-weight: 600; margin: -4px 0 10px; }
+    h1 { font-size: calc(23 * var(--fs) / 16); line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.2px; overflow-wrap: break-word; }
+    .meta { color: var(--muted); font-size: calc(15 * var(--fs) / 16); margin: 0 0 10px; }
+    .ended-note { color: var(--muted); font-size: calc(13 * var(--fs) / 16); font-weight: 600; margin: -4px 0 10px; }
     .details { display: flex; flex-direction: column; gap: 10px; margin: 0 0 22px; }
-    .meta-sub { color: var(--muted); font-size: 14px; margin: 0; }
-    .description { color: var(--ink); font-size: 15px; line-height: 1.6; white-space: pre-line;
+    .meta-sub { color: var(--muted); font-size: calc(14 * var(--fs) / 16); margin: 0; }
+    .description { color: var(--ink); font-size: calc(15 * var(--fs) / 16); line-height: 1.6; white-space: pre-line;
       overflow-wrap: break-word; margin: 0; }
     .qr-line { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
     .qr-line img { width: 44px; height: 44px; border-radius: 6px; flex: none; }
-    .qr-line span { font-size: 13px; color: var(--muted); }
+    .qr-line span { font-size: calc(13 * var(--fs) / 16); color: var(--muted); }
     .btn {
       display: block; width: 100%; text-align: center; text-decoration: none;
-      padding: 15px 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
+      padding: 15px 16px; border-radius: 14px; font-size: calc(16 * var(--fs) / 16); font-weight: 600;
       border: none; cursor: pointer; margin-top: 10px;
     }
     .btn-primary { background: var(--indigo); color: #fff; }
@@ -107,33 +117,35 @@
     .btn-store { background: #111; color: #fff; }
     /* Secondary actions (calendar, copy link): quiet, next to each other, so
        there is one primary action on the screen. */
-    .btn-quiet { background: #f2f0fb; color: var(--ink); width: auto; flex: 1 1 auto; margin-top: 0; padding: 11px 14px; font-size: 14px; }
+    .btn-quiet { background: #f2f0fb; color: var(--ink); width: auto; flex: 1 1 auto; margin-top: 0; padding: 11px 14px; font-size: calc(14 * var(--fs) / 16); }
     .action-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; }
+    .hint { text-align: center; color: var(--muted); font-size: calc(13 * var(--fs) / 16); margin-top: 16px; }
     .hidden { display: none !important; }
     .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
+    h1.skeleton { min-height: 2.5em; }
+    p.meta.skeleton { min-height: 2.9em; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 
     /* ---- RSVP flow (/i/<token> invite links) ---------------------------- */
     .rsvp-screen { display: flex; flex-direction: column; gap: 12px; }
-    .rsvp-heading { font-size: 19px; line-height: 1.3; margin: 4px 0 0; font-weight: 700; }
+    .rsvp-heading { font-size: calc(19 * var(--fs) / 16); line-height: 1.3; margin: 4px 0 0; font-weight: 700; }
     .install-heading { margin-top: 8px; }
     .field { display: flex; flex-direction: column; gap: 6px; }
-    .field-label { font-size: 13px; color: var(--muted); font-weight: 600; }
-    .field-error { color: #c0392b; font-size: 13px; margin: -4px 0 0; }
+    .field-label { font-size: calc(13 * var(--fs) / 16); color: var(--muted); font-weight: 600; }
+    .field-error { color: #c0392b; font-size: calc(13 * var(--fs) / 16); margin: -4px 0 0; }
     .input {
       width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e3e1f3;
-      font-size: 16px; font-family: inherit; background: #fbfaff; color: var(--ink);
+      font-size: max(16px, var(--fs)); font-family: inherit; background: #fbfaff; color: var(--ink);
     }
     .input:focus { outline: 2px solid var(--indigo); outline-offset: 1px; }
     .phone-row { flex-direction: row; gap: 8px; }
     .input-country { width: 86px; flex: none; }
     .input-phone { flex: 1; }
-    .input-code { letter-spacing: 4px; font-size: 20px; text-align: center; }
+    .input-code { letter-spacing: 4px; font-size: calc(20 * var(--fs) / 16); text-align: center; }
     .chip-row { display: flex; gap: 8px; }
     .chip {
       padding: 8px 14px; border-radius: 999px; border: 1px solid #e3e1f3; background: #fbfaff;
-      color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer;
+      color: var(--ink); font-weight: 600; font-size: calc(14 * var(--fs) / 16); cursor: pointer;
     }
     .chip-active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
     .answer-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -143,37 +155,37 @@
     .btn-answer { flex: 1 1 0; min-width: max-content; margin-top: 0; padding-left: 10px; padding-right: 10px; white-space: nowrap; }
     .btn-going { background: #f2f0fb; color: var(--ink); }
     .btn-maybe { background: #f2f0fb; color: var(--ink); }
-    .btn-cant { background: #f2f0fb; color: var(--muted); }
+    .btn-cant { background: #f2f0fb; color: var(--ink); }
     .btn-answer.selected { background: var(--indigo); color: #fff; }
-    .already-said { font-weight: 600; font-size: 14px; margin: 0; }
-    .hint-left { color: var(--muted); font-size: 13px; margin: -6px 0 0; }
-    .privacy-line { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 6px; }
+    .already-said { font-weight: 600; font-size: calc(14 * var(--fs) / 16); margin: 0; }
+    .hint-left { color: var(--muted); font-size: calc(13 * var(--fs) / 16); margin: -6px 0 0; }
+    .privacy-line { color: var(--muted); font-size: calc(12 * var(--fs) / 16); line-height: 1.5; margin-top: 6px; }
     .privacy-line a { color: var(--indigo); font-weight: 600; }
     .address-card {
       background: #f7f6fd; border-radius: 14px; padding: 14px 16px; display: flex;
       flex-direction: column; gap: 6px;
     }
     .address-title { font-weight: 700; margin: 0; }
-    .address-line { color: var(--muted); margin: 0; font-size: 14px; }
-    .guest-count { font-size: 13px; color: var(--muted); margin: 0; }
+    .address-line { color: var(--muted); margin: 0; font-size: calc(14 * var(--fs) / 16); }
+    .guest-count { font-size: calc(13 * var(--fs) / 16); color: var(--muted); margin: 0; }
     .guest-list { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
     .guest-row { display: flex; align-items: center; gap: 10px; }
     .guest-avatar {
       width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e3e1f3;
-      display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; font-size: calc(13 * var(--fs) / 16); font-weight: 700;
       color: var(--indigo); flex: none;
     }
-    .guest-name { font-size: 14px; }
-    .change-answer-link { color: var(--indigo); font-size: 13px; text-align: center; margin-top: 4px; }
+    .guest-name { font-size: calc(14 * var(--fs) / 16); }
+    .change-answer-link { color: var(--indigo); font-size: calc(13 * var(--fs) / 16); text-align: center; margin-top: 4px; }
     .install-block {
       margin-top: 18px; padding: 22px 18px; border-radius: 18px;
       background: var(--install-tint); display: flex; flex-direction: column;
       align-items: center; gap: 10px; text-align: center;
     }
     .install-icon { width: 64px; height: 64px; border-radius: 14px; display: block; background: #fff; }
-    .install-heading { margin: 2px 0 0; font-size: 22px; font-weight: 800; text-align: center; }
+    .install-heading { margin: 2px 0 0; font-size: calc(22 * var(--fs) / 16); font-weight: 800; text-align: center; }
     .install-lines { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; }
-    .install-line { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--ink); }
+    .install-line { display: flex; align-items: flex-start; gap: 8px; font-size: calc(14 * var(--fs) / 16); color: var(--ink); }
     .install-line .check { color: var(--install-purple); font-weight: 700; flex: none; line-height: 1.4; }
     .install-btn {
       width: 100%; min-height: 52px; padding: 17px 16px; margin-top: 4px;
@@ -185,9 +197,9 @@
       #rsvp-root:has(.install-block) .cover { aspect-ratio: 16 / 5; }
       #rsvp-root:has(.install-block) .install-icon { display: none; }
     }
-    .open-invite-link { text-align: center; color: var(--indigo); font-size: 13px; }
+    .open-invite-link { text-align: center; color: var(--indigo); font-size: calc(13 * var(--fs) / 16); }
     .qr-code { display: block; margin: 6px auto 0; border-radius: 8px; }
-    .qr-caption { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+    .qr-caption { text-align: center; color: var(--muted); font-size: calc(12 * var(--fs) / 16); margin: 0; }
 
     /* ---- Description show-more (simple card) ----------------------------- */
     .description.clamped {
@@ -196,7 +208,7 @@
     }
     .show-more-btn {
       display: block; background: none; border: none; color: var(--indigo);
-      font-weight: 600; font-size: 14px; padding: 2px 0 0; margin: 0; cursor: pointer;
+      font-weight: 600; font-size: calc(14 * var(--fs) / 16); padding: 2px 0 0; margin: 0; cursor: pointer;
       text-align: left; font-family: inherit;
     }
 
@@ -213,11 +225,24 @@
     }
     .modal-close {
       position: absolute; top: 10px; right: 10px; background: none; border: none;
-      font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 8px;
+      font-size: calc(22 * var(--fs) / 16); color: var(--muted); cursor: pointer; line-height: 1; padding: 8px;
     }
-    .modal-heading { font-size: 19px; font-weight: 800; margin: 8px 0 8px; }
-    .modal-sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+    .modal-heading { font-size: calc(19 * var(--fs) / 16); font-weight: 800; margin: 8px 0 8px; }
+    .modal-sub { color: var(--muted); font-size: calc(14 * var(--fs) / 16); margin: 0 0 18px; }
     .modal-card .qr-line { justify-content: center; margin-top: 0; }
+
+    /* On a phone the card starts at the top. Centered, it would slide down
+       while the event loads and the card grows, so the page jumped once. */
+    @media (max-width: 759px) {
+      body { align-items: flex-start; }
+      .card { margin: 0 auto; }
+    }
+    @media (max-width: 300px) {
+      body { padding-left: 10px; padding-right: 10px; }
+      .body { padding: 16px 14px 20px; }
+      h1, .rsvp-heading, .meta, .description { overflow-wrap: anywhere; hyphens: auto; }
+      h1 { font-size: calc(19 * var(--fs) / 16); }
+    }
 
     /* ---- Desktop touches (simple card only) -------------------------------
        Card stays the same narrow width as on phone - a PC visitor is just
@@ -234,7 +259,7 @@
         border-radius: 14px; gap: 14px;
       }
       #simple-card .qr-line img { width: 72px; height: 72px; }
-      #simple-card .qr-line span { font-size: 14px; }
+      #simple-card .qr-line span { font-size: calc(14 * var(--fs) / 16); }
     }
   </style>
 </head>
@@ -291,8 +316,8 @@
       <div id="interested-modal" class="modal-overlay hidden">
         <div class="modal-card">
           <button type="button" id="interested-close" class="modal-close" aria-label="Close">&times;</button>
-          <h2 class="modal-heading">Get Pinfo to save this event</h2>
-          <p class="modal-sub">Save it, see who's going and get a reminder in the app.</p>
+          <h2 class="modal-heading" id="interested-heading">Get Pinfo to save this event</h2>
+          <p class="modal-sub" id="interested-sub">Save it, see who's going and get a reminder in the app.</p>
           <a id="interested-appstore" class="btn btn-primary hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
           <p id="interested-qr" class="qr-line hidden">
             <img src="/assets/appstore-qr.svg" alt="Scan with your iPhone camera" width="88" height="88" />
@@ -334,9 +359,9 @@
   <main class="card hidden" id="plain-404" role="main">
     <div class="body">
       <span class="brand"><span class="dot"></span> Pinfo</span>
-      <h1>Page not found</h1>
-      <p class="meta">The page you're looking for doesn't exist or may have moved.</p>
-      <a class="btn btn-primary" href="/">Go to Pinfo</a>
+      <h1 id="plain-404-title">Page not found</h1>
+      <p class="meta" id="plain-404-meta">The page you're looking for doesn't exist or may have moved.</p>
+      <a class="btn btn-primary" id="plain-404-btn" href="/">Go to Pinfo</a>
     </div>
   </main>
 
@@ -358,6 +383,48 @@
   </main>
 
   <script>
+    // ---- Language --------------------------------------------------------------
+    // A German browser gets German words everywhere on this page. English is
+    // the fallback for every other language.
+    var DE = /^de/i.test(navigator.language || "");
+    function tr(en, de) { return DE ? de : en; }
+    function localizeStatic() {
+      if (!DE) return;
+      var texts = {
+        "platform-note": "Pinfo gibt es vorerst nur für das iPhone. Hier siehst du alles zu diesem Event.",
+        "title": "Event wird geladen...",
+        "rsvp-title": "Event wird geladen...",
+        "interested-btn": "Interessiert",
+        "get-pinfo": "Pinfo laden",
+        "open-invite": "Ich habe Pinfo, meine Einladung öffnen",
+        "open-invite-hint": "Pinfo schon installiert? Tippe auf „Meine Einladung öffnen“, um dabei zu sein.",
+        "open-invite-fail": "Pinfo hat sich nicht geöffnet. Lade zuerst Pinfo, dann versuche es noch einmal.",
+        "description-more": "Mehr anzeigen",
+        "interested-heading": "Hol dir Pinfo, um dieses Event zu speichern",
+        "interested-sub": "Speichere es, sieh, wer kommt, und bekomme in der App eine Erinnerung.",
+        "interested-appstore": "Pinfo laden",
+        "interested-android-note": "Pinfo gibt es vorerst nur für das iPhone.",
+        "not-found-btn": "Pinfo laden, kostenlos",
+        "not-found-qr-caption": "Mit der iPhone-Kamera scannen",
+        "plain-404-title": "Seite nicht gefunden",
+        "plain-404-meta": "Die gesuchte Seite gibt es nicht oder sie wurde verschoben.",
+        "plain-404-btn": "Zu Pinfo"
+      };
+      for (var id in texts) {
+        var node = document.getElementById(id);
+        if (node) node.textContent = texts[id];
+      }
+      var lines = document.querySelectorAll(".qr-line span");
+      for (var i = 0; i < lines.length; i++) lines[i].textContent = "Du hast ein iPhone? Hol dir Pinfo";
+      var qrs = document.querySelectorAll("img[alt='Scan with your iPhone camera']");
+      for (var j = 0; j < qrs.length; j++) qrs[j].alt = "Mit der iPhone-Kamera scannen";
+      var close = document.getElementById("interested-close");
+      if (close) close.setAttribute("aria-label", "Schließen");
+      var home = document.getElementById("plain-404-btn");
+      if (home) home.setAttribute("href", "/de/");
+    }
+    localizeStatic();
+
     // ---- Config -------------------------------------------------------------
     var SUPABASE_URL = "https://ftmwhexhxdskasskzglp.supabase.co";
     // Publishable (client-safe) key - same one shipped in the app; RLS still applies.
@@ -532,9 +599,10 @@
         if (isNaN(end.getTime()) || end <= start) return startDate + ", " + startTime;
         var endTime = new Intl.DateTimeFormat(undefined, timeOpts).format(end);
         var sameDay = start.toDateString() === end.toDateString();
-        if (sameDay) return startDate + ", " + startTime + " to " + endTime;
+        var toWord = tr(" to ", " bis ");
+        if (sameDay) return startDate + ", " + startTime + toWord + endTime;
         var endDate = new Intl.DateTimeFormat(undefined, dateOpts).format(end);
-        return startDate + ", " + startTime + " to " + endDate + ", " + endTime;
+        return startDate + ", " + startTime + toWord + endDate + ", " + endTime;
       } catch (e) { return fmtDate(startIso); }
     }
 
@@ -559,8 +627,9 @@
       var metaEl = document.getElementById("meta");
       titleEl.classList.remove("skeleton");
       metaEl.classList.remove("skeleton");
-      titleEl.textContent = "This event isn't available";
-      metaEl.textContent = "It may be private, cancelled, or the link may be wrong. If someone invited you, ask them to send the link again.";
+      titleEl.textContent = tr("This event isn't available", "Dieses Event ist nicht verfügbar");
+      metaEl.textContent = tr("It may be private, cancelled, or the link may be wrong. If someone invited you, ask them to send the link again.",
+        "Es ist vielleicht privat oder abgesagt, oder der Link stimmt nicht. Wenn dich jemand eingeladen hat, bitte ihn, dir den Link noch einmal zu schicken.");
       document.getElementById("cover").remove();
       document.getElementById("not-found-actions").classList.remove("hidden");
       if (isIOS()) {
@@ -599,7 +668,7 @@
       var metaEl = document.getElementById("meta");
       titleEl.classList.remove("skeleton");
       metaEl.classList.remove("skeleton");
-      titleEl.textContent = ev.title || "View this event on Pinfo";
+      titleEl.textContent = ev.title || tr("View this event on Pinfo", "Dieses Event auf Pinfo ansehen");
       metaEl.textContent = ev.date_start ? fmtDateRange(ev.date_start, ev.date_end) : "";
 
       var ended = isEventEnded(ev);
@@ -611,7 +680,7 @@
           endedEl.className = "ended-note";
           metaEl.insertAdjacentElement("afterend", endedEl);
         }
-        endedEl.textContent = "This event has ended";
+        endedEl.textContent = tr("This event has ended", "Dieses Event ist vorbei");
       } else if (endedEl) {
         endedEl.remove();
       }
@@ -623,7 +692,7 @@
       var detailsEl = document.getElementById("details");
       var hostEl = document.getElementById("host-line");
       if (ev.host_name) {
-        hostEl.textContent = "Hosted by " + ev.host_name;
+        hostEl.textContent = tr("Hosted by ", "Gastgeber: ") + ev.host_name;
         hostEl.classList.remove("hidden");
       } else {
         hostEl.classList.add("hidden");
@@ -692,13 +761,12 @@
       // plain div that keeps the same gradient background via the shared
       // .cover class.
       img.onerror = function () {
-        var placeholder = document.createElement("div");
-        placeholder.id = "cover";
-        placeholder.className = "cover";
-        img.replaceWith(placeholder);
+        img.onerror = null;
+        img.src = "/assets/cover-placeholder.svg";
+        img.alt = "";
       };
-      if (cover) { img.src = cover; img.alt = ev.title || "Event cover"; }
-      else { img.remove(); }
+      if (cover) { img.src = cover; img.alt = ev.title || tr("Event cover", "Event-Titelbild"); }
+      else { img.src = "/assets/cover-placeholder.svg"; img.alt = ""; }
 
       // Interested shows for any event that resolves (always public, see
       // above) - it never claims or stores an answer, just opens the
@@ -715,7 +783,7 @@
 
       if (ev.title) {
         document.title = ev.title + " - Pinfo";
-        var description = ev.date_start ? "On Pinfo - " + fmtDate(ev.date_start) : "Discover this event on Pinfo.";
+        var description = ev.date_start ? tr("On Pinfo - ", "Auf Pinfo - ") + fmtDate(ev.date_start) : tr("Discover this event on Pinfo.", "Entdecke dieses Event auf Pinfo.");
         document.getElementById("og-title").setAttribute("content", ev.title);
         document.getElementById("og-description").setAttribute("content", description);
         document.getElementById("twitter-title").setAttribute("content", ev.title);
@@ -777,7 +845,7 @@
     // or the function this page needs is not there, the page reloads once,
     // fetching the script fresh, and then says so instead of staying on the
     // grey loading card.
-    var ASSET_V = "2179091410";
+    var ASSET_V = "b4d6e87951";
     var RELOAD_KEY = "pinfo-rsvp-reloaded";
 
     function rsvpFailed(rsvpRoot) {
@@ -844,7 +912,17 @@
       // The full web RSVP flow (see docs/README for the write-up): swap
       // from the simple card to the RSVP container and hand off to
       // assets/rsvp.js, loaded only for this route so /event/ and /e/
-      // visitors never pay for it.
+      // visitors never pay for it. The event's own data is asked for right
+      // now, while the script is still downloading, and handed over once.
+      try {
+        window.pinfoEarlyPreview = {
+          token: route.token,
+          promise: fetch(SUPABASE_URL + "/rest/v1/rpc/get_invite_preview?_token=" + encodeURIComponent(route.token), {
+            headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY }
+          }).then(function (r) { return r.ok ? r.json() : null; })
+        };
+        window.pinfoEarlyPreview.promise.catch(function () { /* the script asks again */ });
+      } catch (e) { window.pinfoEarlyPreview = null; }
       runRsvp(function (api, rsvpRoot) { api.init(rsvpRoot, route.token); });
     } else {
       var path = location.pathname.replace(/\/+$/, "") || "/";

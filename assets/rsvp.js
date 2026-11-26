@@ -436,6 +436,13 @@
   // whose anonymous preview can say "full" (the one seat is taken, by
   // them) even though they are the one on the list.
   function previewInvite(token, idToken) {
+    // The page asked for the anonymous answer while this script was still
+    // downloading. It is used once, for the first anonymous request only.
+    var early = window.pinfoEarlyPreview;
+    window.pinfoEarlyPreview = null;
+    if (early && !idToken && early.token === token) {
+      return withTimeout(early.promise.catch(function () { return null; }), 10000);
+    }
     var url = SUPABASE_URL + "/rest/v1/rpc/get_invite_preview?_token=" + encodeURIComponent(token);
     var auth = idToken ? ("Bearer " + idToken) : ("Bearer " + SUPABASE_KEY);
     return withTimeout(
