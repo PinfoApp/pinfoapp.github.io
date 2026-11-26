@@ -54,7 +54,7 @@
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; height: 100%; }
-    html { background: var(--bg); }
+    html { background: var(--bg); touch-action: manipulation; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(160deg, #ede9fe 0%, var(--bg) 55%);
@@ -105,6 +105,10 @@
     .btn-primary { background: var(--indigo); color: #fff; }
     .btn-primary:active { background: var(--indigo-deep); }
     .btn-store { background: #111; color: #fff; }
+    /* Secondary actions (calendar, copy link): quiet, next to each other, so
+       there is one primary action on the screen. */
+    .btn-quiet { background: #f2f0fb; color: var(--ink); width: auto; flex: 1 1 auto; margin-top: 0; padding: 11px 14px; font-size: 14px; }
+    .action-row { display: flex; flex-wrap: wrap; gap: 8px; }
     .hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; }
     .hidden { display: none !important; }
     .skeleton { background: #ece9f6; color: transparent; border-radius: 8px; animation: pulse 1.3s ease-in-out infinite; }
@@ -177,6 +181,10 @@
     }
     .install-btn:active { background: var(--install-purple-deep); }
     .install-block .hint { margin-top: 2px; }
+    @media (max-height: 700px) and (orientation: portrait) {
+      #rsvp-root:has(.install-block) .cover { aspect-ratio: 16 / 5; }
+      #rsvp-root:has(.install-block) .install-icon { display: none; }
+    }
     .open-invite-link { text-align: center; color: var(--indigo); font-size: 13px; }
     .qr-code { display: block; margin: 6px auto 0; border-radius: 8px; }
     .qr-caption { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
@@ -255,9 +263,10 @@
            anywhere or validated here, claiming an invite happens only
            inside the app, via an authenticated call. -->
       <div id="actions">
-        <a id="get-pinfo" class="btn btn-primary hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
+        <a id="get-pinfo" class="btn btn-store hidden" href="https://apps.apple.com/app/id6463236759">Get Pinfo</a>
         <a id="open-invite" class="btn btn-store hidden" href="#">I have Pinfo - open my invite</a>
         <p id="open-invite-hint" class="hint hidden">Installed Pinfo? Tap 'open my invite' to join.</p>
+        <p id="open-invite-fail" class="hint hidden">Pinfo didn't open. Get Pinfo first, then try again.</p>
       </div>
 
       <div id="details" class="details hidden">
@@ -444,10 +453,31 @@
     // in Safari, since Universal Links only fire when coming from another
     // app.
     function activateInvite(id, token) {
-      document.getElementById("open-invite").href =
-        "pinfo://event/" + id + "?t=" + encodeURIComponent(token);
-      document.getElementById("open-invite").classList.remove("hidden");
+      var openUrl = "pinfo://event/" + id + "?t=" + encodeURIComponent(token);
+      var openBtn = document.getElementById("open-invite");
+      openBtn.href = openUrl;
+      openBtn.classList.remove("hidden");
       document.getElementById("open-invite-hint").classList.remove("hidden");
+      // Without the app Safari shows an error page for the app's own
+      // address: try it in a hidden frame and, if this page is still here a
+      // moment later, say what to do instead.
+      openBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        var fail = document.getElementById("open-invite-fail");
+        fail.classList.add("hidden");
+        var left = false;
+        var gone = function () { left = true; };
+        document.addEventListener("visibilitychange", gone, { once: true });
+        window.addEventListener("pagehide", gone, { once: true });
+        var frame = document.createElement("iframe");
+        frame.style.display = "none";
+        frame.src = openUrl;
+        document.body.appendChild(frame);
+        setTimeout(function () {
+          if (frame.parentNode) frame.parentNode.removeChild(frame);
+          if (!left && document.visibilityState === "visible") fail.classList.remove("hidden");
+        }, 2500);
+      });
     }
 
     // Interested never claims or stores anything on the server - it only
@@ -747,7 +777,7 @@
     // or the function this page needs is not there, the page reloads once,
     // fetching the script fresh, and then says so instead of staying on the
     // grey loading card.
-    var ASSET_V = "f330ff389e";
+    var ASSET_V = "2179091410";
     var RELOAD_KEY = "pinfo-rsvp-reloaded";
 
     function rsvpFailed(rsvpRoot) {

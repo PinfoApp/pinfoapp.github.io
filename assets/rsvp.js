@@ -168,7 +168,11 @@
       goingPlus: function (n) { return "Going +" + n; },
       question: function (title) { return title ? "Are you coming to " + title + "?" : "Are you coming?"; },
       addressAfter: "The exact address is shown after you answer.",
-      askHint: "The host will see this as Going."
+      askHint: "The host will see this as Going.",
+      invalidNext: "Check the link, or ask the host to send it again.",
+      cancelledNext: "Open Pinfo to find other events near you.",
+      addToCalendar: "Add to calendar",
+      appNotOpened: "Pinfo didn't open. Get Pinfo first, then try again."
     },
     de: {
       invalid: "Dieser Einladungslink ist nicht mehr gültig.",
@@ -272,7 +276,11 @@
       goingPlus: function (n) { return "Dabei +" + n; },
       question: function (title) { return title ? "Kommst du zu " + title + "?" : "Kommst du?"; },
       addressAfter: "Die genaue Adresse siehst du nach deiner Antwort.",
-      askHint: "Der Gastgeber sieht das als Dabei."
+      askHint: "Der Gastgeber sieht das als Dabei.",
+      invalidNext: "Prüfe den Link oder bitte den Gastgeber, ihn noch einmal zu schicken.",
+      cancelledNext: "Öffne Pinfo, um andere Events in deiner Nähe zu finden.",
+      addToCalendar: "Zum Kalender hinzufügen",
+      appNotOpened: "Pinfo hat sich nicht geöffnet. Hol dir zuerst Pinfo und versuche es dann erneut."
     }
   };
   var S = STRINGS[LOCALE];
@@ -642,10 +650,17 @@
     opts = opts || {};
     clear(contentEl);
     var children = [el("p", { class: "meta", text: message })];
+    if (opts.next) children.push(el("p", { class: "meta", text: opts.next }));
     if (opts.button) children.push(el("button", { class: "btn btn-primary", text: opts.button.label, onclick: opts.button.onClick }));
-    if (opts.getPinfo) children.push(el("a", { class: "btn btn-store", href: APPSTORE_URL, text: S.installButton }));
+    // The app is for iPhone: the button is only offered where it can work.
+    if (opts.getPinfo && isIOS()) children.push(el("a", { class: "btn btn-store", href: APPSTORE_URL, text: S.installButton }));
     contentEl.appendChild(card(children));
   }
+
+  // A link that does not lead anywhere, and an event that was cancelled, say
+  // what to do next instead of just stopping.
+  function renderInvalid() { renderSimpleMessage(S.invalid, { next: S.invalidNext, getPinfo: true }); }
+  function renderCancelled() { renderSimpleMessage(S.cancelled, { next: S.cancelledNext, getPinfo: true }); }
 
   // A finger on a button while a text field has focus: the first tap used to
   // only close the keyboard, the page moved, and the tap was lost. The press
@@ -1077,10 +1092,10 @@
         if (extra.showError) extra.showError(S.nameNotAllowed);
         break;
       case "invalid":
-        renderSimpleMessage(S.invalid);
+        renderInvalid();
         break;
       case "cancelled":
-        renderSimpleMessage(S.cancelled);
+        renderCancelled();
         break;
       case "past":
         renderSimpleMessage(S.past);
@@ -1115,7 +1130,7 @@
         if (!(data && data.status === "not_responded")) return handleStatusResult(token, preview, authCtx, data);
         previewInvite(token, idToken).then(function (rows) {
           var fresh = rows && rows[0] ? rows[0] : preview;
-          if (fresh.status === "cancelled") return renderSimpleMessage(S.cancelled);
+          if (fresh.status === "cancelled") return renderCancelled();
           if (fresh.status === "past") return renderSimpleMessage(S.past);
           if (fresh.status === "removed") return renderSimpleMessage(S.removed);
           renderAnswerForm(token, fresh, authCtx);
@@ -1160,8 +1175,8 @@
       var mins = Math.ceil((data.retry_after_s || 60) / 60);
       return renderSimpleMessage(S.rateLimited(mins));
     }
-    if (status === "invalid") return renderSimpleMessage(S.invalid);
-    if (status === "cancelled") return renderSimpleMessage(S.cancelled);
+    if (status === "invalid") return renderInvalid();
+    if (status === "cancelled") return renderCancelled();
     if (status === "past") return renderSimpleMessage(S.past);
     if (status === "removed") return renderSimpleMessage(S.removed);
     return renderSimpleMessage(S.genericError);
@@ -1218,7 +1233,7 @@
   }
 
   function copyLinkButton() {
-    var btn = el("button", { type: "button", class: "btn btn-store", text: S.copyLink });
+    var btn = el("button", { type: "button", class: "btn btn-quiet", text: S.copyLink });
     btn.addEventListener("click", function () {
       var link = location.href;
       var done = function () {
@@ -1254,22 +1269,30 @@
     var description = ev.description || (preview && preview.description) || "";
 
     var children = [];
+    var actions = [];
     if (startIso) {
       var start = new Date(startIso);
       var end = endIso ? new Date(endIso) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
-      children.push(el("a", {
-        class: "btn btn-store", target: "_blank", rel: "noopener",
+      // On an iPhone the calendar file opens Apple Calendar; Google's own page
+      // is only for phones and computers that use it (signed out it lands on
+      // Google's start page). With no app to get, an Android phone's one
+      // primary action is the calendar.
+      var gcal = el("a", {
+        class: isAndroid() ? "btn btn-primary" : "btn btn-quiet", target: "_blank", rel: "noopener",
         href: gcalHref(title, start, end, locationStr, description),
         text: S.addToGoogleCalendar
-      }));
-      var icsBtn = el("button", { type: "button", class: "btn btn-store", text: S.downloadIcs });
+      });
+      var icsBtn = el("button", { type: "button", class: "btn btn-quiet", text: isIOS() ? S.addToCalendar : S.downloadIcs });
       icsBtn.addEventListener("click", function () {
         downloadIcs(buildIcsBlob(title, start, end, locationStr, description));
       });
-      children.push(icsBtn);
+      if (isAndroid()) children.push(gcal);
+      else if (!isIOS()) actions.push(gcal);
+      actions.push(icsBtn);
     }
     children.push(el("p", { class: "hint", text: S.keepLinkText }));
-    children.push(copyLinkButton());
+    actions.push(copyLinkButton());
+    children.push(el("div", { class: "action-row" }, actions));
 
     container.appendChild(card(children));
   }
@@ -1338,7 +1361,7 @@
       detailChildren.push(el("div", { class: "address-card" }, [
         el("p", { class: "address-title", text: loc.title || "" }),
         el("p", { class: "address-line", text: loc.address || "" }),
-        el("a", { class: "btn btn-store", href: mapsHref, target: "_blank", rel: "noopener", text: S.openInMaps })
+        el("a", { class: "btn btn-quiet", href: mapsHref, target: "_blank", rel: "noopener", text: S.openInMaps })
       ]));
     }
 
@@ -1369,6 +1392,24 @@
   // buttons. This is the main growth moment: visitors whose browser isn't
   // Safari never see the Smart App Banner, so this in-page pitch is the
   // only install nudge most of them get.
+  // "Open in Pinfo" uses the app's own address. Without the app Safari shows
+  // an error page for it, so it is tried in a hidden frame; if this page is
+  // still here a moment later, the visitor is told what to do instead.
+  function openInApp(url, onFail) {
+    var left = false;
+    function gone() { left = true; }
+    document.addEventListener("visibilitychange", gone, { once: true });
+    window.addEventListener("pagehide", gone, { once: true });
+    var frame = document.createElement("iframe");
+    frame.style.display = "none";
+    frame.src = url;
+    document.body.appendChild(frame);
+    setTimeout(function () {
+      if (frame.parentNode) frame.parentNode.removeChild(frame);
+      if (!left && document.visibilityState === "visible") onFail();
+    }, 2500);
+  }
+
   function appendInstallBlock(container, ctx) {
     var response = ctx.response;
     var host = (ctx.event && ctx.event.host_name) || (ctx.preview && ctx.preview.host_name) || "";
@@ -1396,27 +1437,43 @@
     }
 
     var block = el("div", { class: "install-block" });
+    // Pinfo is an iPhone app: an Android phone gets one quiet line (no
+    // download button, no code to scan on the phone itself), a computer gets
+    // the code to scan with an iPhone.
+    if (isAndroid()) {
+      container.appendChild(card([el("p", { class: "hint", text: S.androidNote })]));
+      return;
+    }
+
     block.appendChild(el("img", { class: "install-icon", src: "/assets/v2/icon.png", alt: "", width: "64", height: "64" }));
     block.appendChild(el("h2", { class: "rsvp-heading install-heading", text: headingTemplate.replace("{host}", host) }));
     var linesList = el("ul", { class: "install-lines" }, lines.map(function (line) {
       var text = line.replace("{host}", host).replace("{city}", city);
-      return el("li", { class: "install-line" }, [el("span", { class: "check", text: "✓" }), el("span", { text: text })]);
+      return el("li", { class: "install-line" }, [el("span", { class: "check", text: "\u2713" }), el("span", { text: text })]);
     }));
-    block.appendChild(linesList);
 
     if (isIOS()) {
+      // The one primary action first; the reasons follow it.
       block.appendChild(el("a", { class: "btn install-btn", href: APPSTORE_URL, text: S.installButton }));
       block.appendChild(el("p", { class: "hint", text: subText }));
+      block.appendChild(linesList);
       if (ctx.eventId && ctx.token) {
+        var hint = el("p", { class: "hint hidden app-hint", text: S.appNotOpened });
+        var openUrl = "pinfo://event/" + ctx.eventId + "?t=" + encodeURIComponent(ctx.token);
         block.appendChild(el("a", {
-          class: "open-invite-link", href: "pinfo://event/" + ctx.eventId + "?t=" + encodeURIComponent(ctx.token),
-          text: S.openMyInvite
+          class: "open-invite-link", href: openUrl, text: S.openMyInvite,
+          onclick: function (e) {
+            e.preventDefault();
+            hint.classList.add("hidden");
+            openInApp(openUrl, function () { hint.classList.remove("hidden"); });
+          }
         }));
+        block.appendChild(hint);
       }
     } else {
+      block.appendChild(linesList);
       block.appendChild(el("img", { class: "qr-code", src: "/assets/appstore-qr.svg", alt: S.qrCaption, width: "180", height: "180" }));
       block.appendChild(el("p", { class: "qr-caption", text: S.qrCaption }));
-      block.appendChild(el("p", { class: "hint", text: S.androidNote }));
     }
 
     container.appendChild(block);
@@ -1525,6 +1582,7 @@
   function renderUnavailable() {
     setGenericHeader(S.unavailableTitle, S.unavailableBody);
     clear(contentEl);
+    if (isIOS()) contentEl.appendChild(card([el("a", { class: "btn btn-store", href: APPSTORE_URL, text: S.installButton })]));
   }
 
   // A verified number that is not on the list. Never says why, and never
@@ -1591,7 +1649,7 @@
       children.push(el("div", { class: "address-card" }, [
         el("p", { class: "address-title", text: loc.title || "" }),
         el("p", { class: "address-line", text: loc.address || "" }),
-        el("a", { class: "btn btn-store", href: mapsHref, target: "_blank", rel: "noopener", text: S.openInMaps })
+        el("a", { class: "btn btn-quiet", href: mapsHref, target: "_blank", rel: "noopener", text: S.openInMaps })
       ]));
     } else if (!view.isHost) {
       children.push(el("p", { class: "meta", text: S.answerToSeeAddress }));
@@ -1792,13 +1850,13 @@
       var preview = rows && rows[0];
       if (!preview) {
         setHeader(null);
-        renderSimpleMessage(S.invalid);
+        renderInvalid();
         return;
       }
       setHeader(preview);
       updateOgTags(preview);
 
-      if (preview.status === "cancelled") return renderSimpleMessage(S.cancelled);
+      if (preview.status === "cancelled") return renderCancelled();
       if (preview.status === "past") return renderSimpleMessage(S.past);
 
       if (preview.link_kind === "personal") {
